@@ -1,0 +1,29 @@
+# NODE
+node_modules
+package-lock.json
+yarn.lock
+
+# APPLICATION
+.env
+sessiondata
+
+# IDEs
+.vscode/settings.json
+.idea
+/node_modules
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+.history
+.vs
+/storage/*.key
+/storage/dotenv-editor
+/storage/logs
