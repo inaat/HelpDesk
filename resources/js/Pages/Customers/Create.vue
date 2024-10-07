@@ -8,12 +8,17 @@
           <text-input v-model="form.last_name" :error="form.errors.last_name" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Last name')" />
           <text-input v-model="form.email" :error="form.errors.email" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Email')" />
           <text-input v-model="form.phone" :error="form.errors.phone" class="pb-8 pr-6 w-full lg:w-1/2" :label="__('Phone')" />
+          <select-input v-model="form.organization_id" :error="form.errors.organization_id" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Organization')">
+            <option :value="null" />
+            <option v-for="organization in organizations" :key="organization.id" :value="organization.id">{{ organization.name }}</option>
+          </select-input>
           <text-input v-model="form.city" :error="form.errors.city" class="pb-8 pr-6 w-full lg:w-1/2" :label="__('City')" />
           <text-input v-model="form.address" :error="form.errors.address" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Address')" />
           <select-input v-model="form.country_id" :error="form.errors.country_id" class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Country')">
             <option :value="null" />
             <option v-for="c in countries" :key="c.id" :value="c.id">{{ __(c.name) }}</option>
           </select-input>
+
           <text-input v-model="form.password" :error="form.errors.password" class="pb-8 pr-6 w-full lg:w-1/3" type="password" autocomplete="new-password" :label="__('Password')" />
           <file-input v-model="form.photo" :error="form.errors.photo" class="pb-8 pr-6 w-full lg:w-1/2" type="file" accept="image/*" :label="__('Photo')" />
         </div>
@@ -44,6 +49,7 @@ export default {
   },
   layout: Layout,
   props: {
+    organizations: Array,
     countries: Array,
     cities: Array,
     title: String,
@@ -61,12 +67,13 @@ export default {
         country_id: null,
         password: '',
         role_id: null,
-        photo: null
+        photo: null,
+        organization_id: null,
       }),
     }
   },
   created() {
-    // this.setDefaultValue(this.countries, 'country_id', 'United States')
+    this.setDefaultValue(this.countries, 'country_id', 'Saudi Arabia')
   },
   methods: {
     setDefaultValue(arr, key, value){
@@ -76,6 +83,7 @@ export default {
       }
     },
     store() {
+      
       this.form.post(this.route('customers.store'))
     },
   },

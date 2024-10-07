@@ -8,6 +8,10 @@
           <text-input v-model="form.last_name" :error="form.errors.last_name" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Last name')" />
           <text-input v-model="form.email" :error="form.errors.email" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Email')" />
           <text-input v-model="form.phone" :error="form.errors.phone" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Phone')" />
+          <select-input v-model="form.organization_id" :error="form.errors.organization_id" class="pb-8 pr-6 w-full lg:w-1/2" :label="__('Organization')">
+            <option :value="null" />
+            <option v-for="organization in organizations" :key="organization.id" :value="organization.id">{{ organization.name }}</option>
+          </select-input>
             <text-input v-model="form.city" :error="form.errors.city" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('City')" />
           <text-input v-model="form.address" :error="form.errors.address" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Address')" />
           <select-input v-model="form.country_id" :error="form.errors.country_id" class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Country')">
@@ -52,6 +56,7 @@ export default {
     countries: Array,
     cities: Array,
     title: String,
+    organizations: Array,
   },
   remember: 'form',
   data() {
@@ -66,6 +71,7 @@ export default {
         city: this.user.city,
         address: this.user.address,
         country_id: this.user.country_id,
+        organization_id:this.user.organization_id,
         password: '',
           photo_path: null
       }),

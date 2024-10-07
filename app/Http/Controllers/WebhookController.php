@@ -132,8 +132,9 @@ class WebhookController extends Controller
                 }
             }
             $assigned_to = null;
-           
-            if ($mobile_no == '966509290196' || $mobile_no == '923428927305') {
+            $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
+            // Check if the mobile number exists in the phone array
+            if (in_array($mobile_no, $phone_array)) {
                 $assigned_to = User::where('phone', $mobile_no)->first()->id;
             }
             // Handle empty fields gracefully

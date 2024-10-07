@@ -20,6 +20,7 @@ use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\Type;
 use App\Models\User;
+use DOMDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -544,6 +545,10 @@ class TicketsController extends Controller
             // Sanitize and allow specific HTML tags in the comment (e.g., <img>, <figure>, etc.)
             $allowedTags = '<figure><img><b><i><br>';
             $sanitizedComment = strip_tags($request['comment'], $allowedTags);
+
+    // Replace &nbsp; with the non-breaking space character
+            $sanitizedComment = str_replace('&nbsp;', "\n\n", $sanitizedComment);
+
             // Check if the comment contains an image tag
             if (strpos($sanitizedComment, '<img') !== false) {
                 // Extract the image URL from the comment (assuming it's properly formatted)
@@ -553,21 +558,22 @@ class TicketsController extends Controller
                 if ($imageUrl) {
                     $filePath = public_path($imageUrl);
                     $filename = basename($imageUrl);
-                    $caption = strip_tags($request['comment']);  // This removes all HTML tags
+
+                   // $caption = strip_tags($request['comment']);  // This removes all HTML tags
 
                     // Send the image through WhatsApp API
-                    $response = $this->whatsappApiService->sendDocument('888', $filePath, $phone, $filename, $caption);
+                    $response = $this->whatsappApiService->sendDocument('888', $filePath, $phone, $filename, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
                     
 
                 } else {
                     // Otherwise, send a text message with the comment
-                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, $sanitizedComment);
+                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
                 }
 
             }else{
             
                     // Otherwise, send a text message with the comment
-                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, $sanitizedComment);
+                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
                 
             }
         }
@@ -575,6 +581,135 @@ class TicketsController extends Controller
         return response()->json($newComment);
     }
 
+    function htmlToWhatsApp($html) {
+        $dom = new DOMDocument();
+        // Suppress errors due to malformed HTML
+        @$dom->loadHTML($html);
+        
+        // This function processes each element recursively
+        function processElement($element) {
+            $result = '';
+    
+            foreach ($element->childNodes as $child) {
+                switch ($child->nodeType) {
+                    case XML_TEXT_NODE:
+                        $result .= $child->nodeValue;
+                        break;
+    
+                    case XML_ELEMENT_NODE:
+                        switch ($child->nodeName) {
+                            case 'br':
+                                $result .= "\n";
+                                break;
+                            case 'p':
+                                $result .= processElement($child) . "\n\n";
+                                break;
+                            case 'h1':
+                            case 'h2':
+                            case 'h3':
+                            case 'h4':
+                            case 'h5':
+                            case 'h6':
+                                $result .= '*' . processElement($child) . '*\n\n';
+                                break;
+                            case 'strong':
+                            case 'b':
+                                $result .= '*' . processElement($child) . '*';
+                                break;
+                            case 'em':
+                            case 'i':
+                                $result .= '_' . processElement($child) . '_';
+                                break;
+                            case 'u':
+                                $result .= '_' . processElement($child) . '_'; // WhatsApp doesn't support underline, using italics instead
+                                break;
+                            case 'a':
+                                $result .= processElement($child) . ' (' . $child->getAttribute('href') . ')';
+                                break;
+                            case 'ol':
+                            case 'ul':
+                                $result .= processListElement($child);
+                                break;
+                            case 'table':
+                                $result .= processTableElement($child);
+                                break;
+                            default:
+                                $result .= processElement($child);
+                        }
+                        break;
+                }
+            }
+    
+            return trim($result);
+        }
+    
+        // Process ordered and unordered lists
+        function processListElement($list) {
+            $result = "\n";
+            $isOrdered = $list->nodeName === 'ol';
+            $counter = 1;
+    
+            foreach ($list->getElementsByTagName('li') as $item) {
+                $bullet = $isOrdered ? "$counter. " : '• ';
+                $result .= $bullet . processElement($item) . "\n";
+                if ($isOrdered) $counter++;
+            }
+    
+            return $result . "\n";
+        }
+    
+        // Process tables
+        function processTableElement($table) {
+            $headers = [];
+            $rows = [];
+    
+            // Extract headers
+            foreach ($table->getElementsByTagName('th') as $th) {
+                $headers[] = trim($th->nodeValue);
+            }
+    
+            // Extract rows
+            foreach ($table->getElementsByTagName('tr') as $tr) {
+                $row = [];
+                foreach ($tr->getElementsByTagName('td') as $td) {
+                    $row[] = trim($td->nodeValue);
+                }
+                if (count($row) > 0) $rows[] = $row;
+            }
+    
+            // Calculate column widths
+            $colWidths = array_map(function ($h, $i) use ($rows) {
+                return max(strlen($h), ...array_map(function ($r) use ($i) {
+                    return isset($r[$i]) ? strlen($r[$i]) : 0;
+                }, $rows));
+            }, $headers, array_keys($headers));
+    
+            // Create the table
+            $result = "```\n";
+            
+            // Add headers
+            if (count($headers) > 0) {
+                $result .= implode(' | ', array_map(function ($h, $w) {
+                    return str_pad($h, $w);
+                }, $headers, $colWidths)) . "\n";
+                $result .= implode('-+-', array_map(function ($w) {
+                    return str_repeat('-', $w);
+                }, $colWidths)) . "\n";
+            }
+    
+            // Add rows
+            foreach ($rows as $row) {
+                $result .= implode(' | ', array_map(function ($cell, $w) {
+                    return str_pad($cell, $w);
+                }, $row, $colWidths)) . "\n";
+            }
+    
+            $result .= "```\n";
+            return $result;
+        }
+    
+        return processElement($dom->documentElement);
+    }
     public function destroy(Ticket $ticket)
     {
         $ticket->delete();

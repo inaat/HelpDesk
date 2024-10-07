@@ -6,6 +6,7 @@ use App\Http\Middleware\RedirectIfCustomer;
 use App\Http\Middleware\RedirectIfNotParmitted;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\App;
@@ -48,6 +49,9 @@ class CustomersController extends Controller {
     public function create(){
         return Inertia::render('Customers/Create',[
             'title' => 'Create a new customer',
+            'organizations' => Organization::orderBy('name')
+                ->get() ->map
+                ->only('id', 'name'),
             'countries' => Country::orderBy('name')
                 ->get()
                 ->map
@@ -60,6 +64,7 @@ class CustomersController extends Controller {
             'first_name' => ['required', 'max:50'],
             'last_name' => ['required', 'max:50'],
             'phone' => ['nullable', 'max:25'],
+            'organization_id' => ['required',Rule::exists('organizations', 'id')],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
             'password' => ['nullable'],
             'city' => ['nullable'],
@@ -100,8 +105,13 @@ class CustomersController extends Controller {
                 'address' => $user->address,
                 'country_id' => $user->country_id,
                 'photo_path' => $user->photo_path,
+                'organization_id' => $user->organization_id,
             ],
             'countries' => Country::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
+                'organizations' => Organization::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -109,7 +119,9 @@ class CustomersController extends Controller {
                 ->get()
                 ->map
                 ->only('id', 'name')
-        ]);
+        ]
+    
+    );
     }
 
     public function update(User $user)
@@ -129,9 +141,12 @@ class CustomersController extends Controller {
             'country_id' => ['nullable'],
             'role_id' => ['nullable'],
             'photo' => ['nullable', 'image'],
+            'organization_id' => ['required',
+                Rule::exists('organizations', 'id'),
+            ],
         ]);
 
-        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id'));
+        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id','organization_id'));
 
         if(Request::file('photo')){
             if(isset($user->photo_path) && !empty($user->photo_path) && File::exists(public_path($user->photo_path))){
