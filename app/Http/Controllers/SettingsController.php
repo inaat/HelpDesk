@@ -183,7 +183,7 @@ class SettingsController extends Controller {
      * @return array
      */
     public function testEmailConfiguration(array $mailVariables) {
-        $template = EmailTemplate::where('slug', $ticket_slug)->first();
+       
         try {
             $data['email_settings'] = $mailVariables;
             
