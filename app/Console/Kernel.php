@@ -3,7 +3,7 @@
 namespace App\Console;
 
 use App\Console\Commands\ImportDemo;
-use App\Console\Commands\PipipingEmail;
+use App\Console\Commands\PippingEmail;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         ImportDemo::class,
-        PipipingEmail::class,
+        PippingEmail::class,
     ];
 
     /**

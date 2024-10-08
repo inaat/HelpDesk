@@ -64,7 +64,24 @@ return [
             "timeout" => 30,
             "extensions" => []
         ],
-
+        'mars_email' => [ // account identifier
+            'host'  => env('MARS_EMAIL_HOST', 'localhost'),
+            'port'  => env('MARS_EMAIL_PORT', 993),
+            'protocol'  => env('MARS_EMAIL_PROTOCOL', 'imap'), //might also use imap, [pop3 or nntp (untested)]
+            'encryption'    => env('MARS_EMAIL_ENCRYPTION', 'ssl'), // Supported: false, 'ssl', 'tls', 'notls', 'starttls'
+            'validate_cert' => env('MARS_EMAIL_VALIDATE_CERT', true),
+            'username' => env('MARS_EMAIL_USERNAME', 'root@example.com'),
+            'password' => env('MARS_EMAIL_PASSWORD', ''),
+            'authentication' => env('MARS_EMAIL_AUTHENTICATION', null),
+            'proxy' => [
+                'socket' => null,
+                'request_fulluri' => false,
+                'username' => null,
+                'password' => null,
+            ],
+            "timeout" => 30,
+            "extensions" => []
+        ],
         /*
         'gmail' => [ // account identifier
             'host' => 'imap.gmail.com',
@@ -86,6 +103,7 @@ return [
             'authentication' => null,
         ]
         */
+        
     ],
 
     /*
