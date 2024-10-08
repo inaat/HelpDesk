@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\RedirectIfNotParmittedMultiple;
+use App\Models\EmailTemplate;
 use App\Models\Language;
+use App\Models\PendingEmail;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -170,8 +172,36 @@ class SettingsController extends Controller {
             'MAIL_FROM_ADDRESS' => ['nullable', 'email'],
             'MAIL_FROM_NAME' => ['nullable'],
         ]);
+        dd($this-> testEmailConfiguration($mailVariables));
         $this->setEnvVariables($mailVariables);
         return Redirect::back()->with('success', 'SMTP configuration updated!');
+    }
+ /**
+     * Handles the testing of email configuration
+     *
+     * @param array $mailVariables
+     * @return array
+     */
+    public function testEmailConfiguration(array $mailVariables) {
+        $template = EmailTemplate::where('slug', $ticket_slug)->first();
+        try {
+            $data['email_settings'] = $mailVariables;
+            
+            // Send a test email
+            \Notification::route('mail', 'inayat@injazat-software.com')
+                ->notify(new \App\Notifications\TestEmailNotification($data));
+    
+            return [
+                'success' => 1,
+                'msg' => __('lang_v1.email_tested_successfully')
+            ];
+        } catch (\Exception $e) {
+            \Log::emergency("File: " . $e->getFile() . " Line: " . $e->getLine() . " Message: " . $e->getMessage());
+            return [
+                'success' => 0,
+                'msg' => $e->getMessage()
+            ];
+        }
     }
 
     public function updatePusher(){

@@ -79,19 +79,19 @@ export default {
         }
 
         if(user_access.customer.read || user_access.customer.update || user_access.customer.create || user_access.customer.delete){
-            this.menu_items.push({'name': 'Customers', 'route': 'customers', 'url': 'customers', 'icon': 'all_users'})
+            this.menu_items.push({'name': 'Contacts', 'route': 'customers', 'url': 'customers', 'icon': 'all_users'})
         }
 
         if(enable_option.note){
             this.menu_items.push( {'name': 'Notes', 'route': 'notes', 'url': 'notes', 'icon': 'notes'} )
         }
 
-        if(enable_option.contact && (user_access.contact.read || user_access.contact.update || user_access.contact.create || user_access.contact.delete)){
-            this.menu_items.push({'name': 'Contacts', 'route': 'contacts', 'url': 'contacts', 'icon': 'contact'})
-        }
+        // if(enable_option.contact && (user_access.contact.read || user_access.contact.update || user_access.contact.create || user_access.contact.delete)){
+        //     this.menu_items.push({'name': 'Contacts', 'route': 'contacts', 'url': 'contacts', 'icon': 'contact'})
+        // }
 
         if(enable_option.organization && (user_access.organization.read || user_access.organization.update || user_access.organization.create || user_access.organization.delete)){
-            this.menu_items.push({'name': 'Organizations', 'route': 'organizations', 'url': 'organizations', 'icon': 'office'})
+            this.menu_items.push({'name': 'Customers', 'route': 'organizations', 'url': 'organizations', 'icon': 'office'})
         }
 
         if(user_access.user.read || user_access.user.update || user_access.user.create || user_access.user.delete){
