@@ -188,7 +188,7 @@ class SettingsController extends Controller {
             $data['email_settings'] = $mailVariables;
             
             // Send a test email
-            \Notification::route('mail', 'inayat@injazat-software.com')
+            \Notification::route('mail', 'inayatullahkks@gmail.com')
                 ->notify(new \App\Notifications\TestEmailNotification($data));
     
             return [

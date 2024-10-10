@@ -1,8 +1,8 @@
 <template>
     <div>
-        <Head :title="__(title)" />
+        <Head :title="__(title)" /> 
         <div class="flex flex-wrap">
-            <div class="max-w-full lg:w-3/5">
+            <div class="max-w-full lg:w-2/5">
                 <form @submit.prevent="update" class="bg-white rounded-md shadow overflow-hidden mr-2">
                     <div class="p-8 -mr-6 -mb-8 flex flex-wrap">
                         <!--Super Admin -->
@@ -98,6 +98,9 @@
                                         {{ __('Download') }}</button>
                                     <button type="button" class="btn flex items-center ml-3" @click="removeAttachment(file, fi)">
                                         {{ __('Remove') }}</button>
+                                        <button type="button" class="btn flex items-center ml-3" @click="viewAttachment(file)">
+        {{ __('View') }}
+    </button>
                                 </div>
                             </div>
                             <div v-if="form.files.length" class="flex items-center justify-between pr-6 pt-8 w-full lg:w-1/2" v-for="(file, fi) in form.files" :key="fi">
@@ -143,7 +146,7 @@
                     </div>
                 </form>
             </div>
-            <div class="max-w-full lg:w-2/5">
+            <div class="max-w-full lg:w-3/5">
                 <div class="bg-white rounded-md shadow overflow-hidden ml-2 chat-area comment-box flex-1 flex flex-col">
                     <div class="flex-3">
                         <div class="chat-header flex flex-col pb-3">
@@ -151,6 +154,7 @@
                             <p class="text-sm font-light">{{ __('Comment histories for this ticket will be available here.') }}</p>
                         </div>
                     </div>
+                    
                     <div class="messages flex-1 overflow-auto reverse__order">
                         <div v-for="(comment, index) in comments.slice().reverse()" :key="index" class="message mb-4 flex">
                             <div v-if="comment.user_id !== user.id" class="flex-2">
@@ -171,27 +175,27 @@
                                 <div class="inline-block bg-blue rounded p-2 px-3 text-white leading-5" v-html="comment.details"></div>
                                 <div class="pr-4"><small class="text-gray-500">{{ moment(comment.updated_at).fromNow(true) }}</small></div>
                             </div>
+                            
                         </div>
+                        <div class="message mb-4 flex"><div class="flex-2"><div class="w-12 h-12 relative"><span class="w-12 h-12 rounded-full mx-auto user_icon" alt="chat-user">E</span></div></div>
+                        <div class="flex-1 px-2 mt__wrap">
+                            <h3 class="font-bold pb-2 text-sm pt-1" v-if="ticket.user">{{ ticket.user}}</h3>
+
+                           
+                            <div class="inline-block bg-blue rounded p-2 px-3 text-white leading-5" v-html="ticket.details"></div>
+
+                            <div class="pr-4"><small class="text-gray-500">{{ moment(ticket.created_at).fromNow(true) }}</small></div>
+                            
+                        </div><!--v-if--></div>
                     </div>
                     <div class="flex-2 pt-4 pb-3">
                         <div class="write bg-white shadow flex rounded-lg">
-<!--                            <div class="flex-3 flex content-center items-center text-center p-4 pr-0">-->
-<!--                                            <span class="block text-center text-gray-400 hover:text-gray-800">-->
-<!--                                                <svg fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" viewBox="0 0 24 24" class="h-6 w-6"><path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>-->
-<!--                                            </span>-->
-<!--                            </div>-->
+
                             <div class="flex-1 ticket_comment_edit">
-<!--                                <textarea v-model="comment" name="message" @keydown.enter.exact.prevent="submitComment" class="w-full block outline-none py-4 px-4 text-sm bg-transparent overflow-hidden" rows="1" :placeholder="__('Write a comment and press enter to send...')" autofocus></textarea>-->
                                 <ckeditor id="ticketDiscussion" :editor="editor" v-model="comment" name="comment" :config="editorConfig" autofocus></ckeditor>
                             </div>
                             <div class="flex-2 w-35 p-2 flex content-center items-center">
-<!--                                <div class="flex-1 text-center">-->
-<!--                                                <span class="text-gray-400 hover:text-gray-800">-->
-<!--                                                    <span class="inline-block align-text-bottom">-->
-<!--                                                        <svg fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>-->
-<!--                                                    </span>-->
-<!--                                                </span>-->
-<!--                                </div>-->
+
                                 <div class="flex-1">
                                     <button class="bg-blue w-10 h-10 rounded-full flex justify-center items-center" @click="submitComment">
                                         <icon class="w-4 h-4 fill-gray-100" name="send"/>
@@ -203,7 +207,45 @@
                 </div>
             </div>
         </div>
+         <!-- Modal for viewing files -->
+<div v-if="showModal" class="flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div class="bg-white p-4 rounded shadow-lg max-w-full lg:w-3/5">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">{{ selectedFile ? selectedFile.name : 'File Viewer' }}</h3>
+            <button @click="closeModal" class="text-2xl">&times;</button>
+        </div>
+        <div v-if="fileUrl" class="">
+            <iframe
+                v-if="selectedFile.name.toLowerCase().endsWith('.pdf')"
+                :src="fileUrl"
+                class="w-full h-full"
+                frameborder="0">
+            </iframe>
+            <img
+                v-else-if="['jpg', 'jpeg', 'png', 'gif'].includes(selectedFile.name.split('.').pop().toLowerCase())"
+                :src="fileUrl"
+                class="max-w-full max-h-full mx-auto"
+                :alt="selectedFile.name"
+            />
+            <iframe
+                v-else
+                :src="fileUrl"
+                class="w-full h-full"
+                frameborder="0">
+            </iframe>
+        </div>
+        <div v-else class="flex-grow flex items-center justify-center">
+            <p>This file type cannot be previewed.</p>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button @click="downloadAttachment(selectedFile)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Download
+            </button>
+        </div>
     </div>
+</div>
+    </div>
+
 </template>
 
 <script>
@@ -257,6 +299,9 @@ export default {
     remember: false,
     data() {
         return {
+            showModal: false,
+        selectedFile: null,
+        fileUrl: null,
             user: this.$page.props.auth.user,
             type_status: [],
             categories: this.all_categories.filter(cat => cat.department_id === this.ticket.department_id),
@@ -373,6 +418,36 @@ export default {
                 this.$inertia.put(this.route('tickets.restore', this.ticket.id))
             }
         },
+        viewAttachment(file) {
+    this.selectedFile = file;
+    this.showModal = true;
+    
+    // Determine file type
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    if (['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+        // For PDFs and images, we can use the existing approach
+        this.fileUrl = `/files/${file.path}`;
+    } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'].includes(fileExtension)) {
+        // For office documents and text files, we might need to use a viewer service
+        // This is a placeholder URL - you'd need to implement a viewer service
+        this.fileUrl = `/api/view-document/${file.id}`;
+    } else {
+        // For other file types, we'll just provide a download link
+        this.fileUrl = null;
+        alert('This file type cannot be previewed. Please download the file to view it.');
+    }
+},
+
+closeModal() {
+    this.showModal = false;
+    this.selectedFile = null;
+    this.fileUrl = null;
+},
+
+getFileUrl() {
+    return this.fileUrl;
+},
         submitComment(){
             var that = this;
             const messageData = {

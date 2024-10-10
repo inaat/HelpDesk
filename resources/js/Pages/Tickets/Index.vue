@@ -1,40 +1,49 @@
 <template>
     <div>
+
         <Head :title="__(title)" />
         <div class="flex flex-col md:flex-row gap-3 mb-4 justify-between items-center ticket-filters">
-            <search-input v-model="form.search" placeholder="Search by Key, Subject, Priority, Status, Assign to..." class="w-full max-w-md search" @reset="reset"></search-input>
+            <search-input v-model="form.search" placeholder="Search by Key, Subject, Priority, Status, Assign to..."
+                class="w-full max-w-md search" @reset="reset"></search-input>
             <div class="filter-add-new flex flex-col gap-3 md:flex-row items-center">
-                <a class="uppercase gap-[1px] text-sm px-3 py-2 flex items-center justify-center" href="/dashboard/ticket/csv/export">
+                <a v-if="auth.user.role.slug === 'admin'"
+                    class="uppercase gap-[1px] text-sm px-3 py-2 flex items-center justify-center"
+                    href="/dashboard/ticket/csv/export">
                     <img class="w-6 h-6" src="/images/svg/export-csv.svg" alt="Export CSV" />
                     <span>{{ __('Export') }}</span>
                 </a>
-                <label for="importCSV" class="uppercase gap-[1px] text-sm px-3 py-2 flex items-center justify-center">
+                <label v-if="auth.user.role.slug === 'admin'" for="importCSV"
+                    class="uppercase gap-[1px] text-sm px-3 py-2 flex items-center justify-center">
                     <img class="w-6 h-6" src="/images/svg/import-csv.svg" alt="Import CSV" />
                     <span>{{ __('Import') }}</span>
                     <input @change="uploadImportCSV" class="hidden" id="importCSV" type="file" />
                 </label>
-                <select v-model="form.limit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <select v-model="form.limit"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
                 </select>
                 <Link class="btn-indigo" :href="this.route('tickets.create')">
-                    <span>{{ __('New Ticket') }}</span>
+                <span>{{ __('New Ticket') }}</span>
                 </Link>
             </div>
         </div>
         <div class="flex flex-col gap-3 mb-4 md:flex-row w-full items-center ticket-filters">
-            <div class="mr-2 w-full">{{ __('Filter Ticket By') }}:</div>
-            <select-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" v-model="form.type_id" class="mr-2 w-full">
+            <div class="mr-2 w-full">{{ __('Filter By') }}:</div>
+            <select-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" v-model="form.type_id"
+                class="mr-2 w-full">
                 <option :value="null">{{ __('Type') }}</option>
                 <option v-for="s in types" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select-input>
-            <select-input v-if="!(hidden_fields && hidden_fields.includes('category'))" v-model="form.category_id" class="mr-2 w-full">
+            <select-input v-if="!(hidden_fields && hidden_fields.includes('category'))" v-model="form.category_id"
+                class="mr-2 w-full">
                 <option :value="null">{{ __('Category') }}</option>
                 <option v-for="s in categories" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select-input>
-            <select-input v-if="!(hidden_fields && hidden_fields.includes('department'))" v-model="form.department_id" class="mr-2 w-full">
+            <select-input v-if="!(hidden_fields && hidden_fields.includes('department'))" v-model="form.department_id"
+                class="mr-2 w-full">
                 <option :value="null">{{ __('Department') }}</option>
                 <option v-for="s in departments" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select-input>
@@ -47,62 +56,81 @@
                 <option v-for="s in statuses" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select-input>
             <select-input-filter :placeholder="__('Assign To')" :onInput="doFilter" @focus="doFilter" :items="assignees"
-                                 v-if="!(hidden_fields && hidden_fields.includes('assigned_to')) && user_access.ticket.update"
-                                 v-model="form.assigned_to" class=" w-full">
+                v-if="!(hidden_fields && hidden_fields.includes('assigned_to')) && user_access.ticket.update"
+                v-model="form.assigned_to" class=" w-full">
             </select-input-filter>
+            <!-- Date Filter: Start Date -->
+            <input type="date" v-model="form.startDate" class="mr-2 w-full border border-gray-300 p-2 rounded"
+                placeholder="DD MM YYYY" />
+
+            <!-- Date Filter: End Date -->
+            <input type="date" v-model="form.endDate" class="mr-2 w-full border border-gray-300 p-2 rounded"
+                placeholder="DD MM YYYY" />
         </div>
         <div class="bg-white rounded-md shadow overflow-x-auto">
             <table class="min-w-full whitespace-nowrap ticket_list">
                 <tr class="text-left font-bold">
                     <th v-for="(h, i) in headers" :key="i">
-            <span :class="{'sort': h.sort, 'active' : form.field === h.name},form.direction">{{ __(h.name) }}
-              <span v-if="h.sort" class="icons">
-                <icon class="fill-gray-300" :class="{'fill-gray-800': (form.direction === 'desc' && form.field === h.value)}" name="up" @click="sort(h.value)" />
-                <icon class="fill-gray-300" :class="{'fill-gray-800': form.direction === 'asc' && form.field === h.value}" name="down" @click="sort(h.value)" />
-              </span>
-            </span>
+                        <span :class="{ 'sort': h.sort, 'active': form.field === h.name }, form.direction">{{ __(h.name)
+                            }}
+                            <span v-if="h.sort" class="icons">
+                                <icon class="fill-gray-300"
+                                    :class="{ 'fill-gray-800': (form.direction === 'desc' && form.field === h.value) }"
+                                    name="up" @click="sort(h.value)" />
+                                <icon class="fill-gray-300"
+                                    :class="{ 'fill-gray-800': form.direction === 'asc' && form.field === h.value }"
+                                    name="down" @click="sort(h.value)" />
+                            </span>
+                        </span>
                     </th>
                 </tr>
                 <tr v-for="ticket in tickets.data" :key="ticket.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
                     <td class="border-t">
-                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                            #{{ ticket.uid }}
+                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
+                            :href="route('tickets.edit', ticket.uid || ticket.id)">
+                        #{{ ticket.uid }}
                         </Link>
                     </td>
                     <td class="border-t">
                         <Link class="s__details flex flex-col" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                          <span class="subject_t">{{ ticket.subject }}</span>
-                          <span class="user__d flex text-xs items-center pt-1">
+                        <span class="subject_t">{{ ticket.subject }}</span>
+                        <span class="user__d flex text-xs items-center pt-1">
                             <span v-if="ticket.user" class="user__n flex items-center pr-4" title="Client">
-                              <icon name="user" class="flex-shrink-0 h-3 fill-gray-400 pr-1" />
-                              {{ ticket.user }}
+                                <icon name="user" class="flex-shrink-0 h-3 fill-gray-400 pr-1" />
+                                {{ ticket.user }}
                             </span>
                             <span v-if="ticket.assigned_to" class="user__n flex items-center pr-4" title="Assignee">
-                              <icon name="user-check" class="flex-shrink-0 h-3 fill-gray-400 pr-1" />
-                              {{ ticket.assigned_to }}
+                                <icon name="user-check" class="flex-shrink-0 h-3 fill-gray-400 pr-1" />
+                                {{ ticket.assigned_to }}
                             </span>
-                          </span>
+                        </span>
                         </Link>
 
                     </td>
                     <td class="border-t">
-                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                            {{ ticket.priority }}
+                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
+                            :href="route('tickets.edit', ticket.uid || ticket.id)">
+                        {{ ticket.priority }}
                         </Link>
                     </td>
                     <td class="border-t">
-                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                            {{ ticket.status }}
+                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
+                            :href="route('tickets.edit', ticket.uid || ticket.id)">
+                        {{ ticket.status }}
                         </Link>
                     </td>
                     <td class="border-t">
-                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                            {{ __('error') === 'error' ? moment(ticket.created_at).fromNow() : moment(ticket.created_at).locale('zh-tw').fromNow() }}
+                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
+                            :href="route('tickets.edit', ticket.uid || ticket.id)">
+                        {{ __('error') === 'error' ? moment(ticket.created_at).format('DD MM YYYY, h:mm') :
+                            moment(ticket.created_at).format('DD MM YYYY, h:mm') }}
                         </Link>
                     </td>
                     <td class="border-t">
-                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('tickets.edit', ticket.uid || ticket.id)">
-                            {{ __('error') === 'error' ? moment(ticket.updated_at).fromNow() : moment(ticket.updated_at).locale('zh-tw').fromNow() }}
+                        <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
+                            :href="route('tickets.edit', ticket.uid || ticket.id)">
+                        {{ __('error') === 'error' ? moment(ticket.updated_at).format('DD MM YYYY, h:mm') :
+                            moment(ticket.updated_at).format('DD MMM YYYY, h:mm') }}
                         </Link>
                     </td>
                 </tr>
@@ -158,12 +186,12 @@ export default {
     data() {
         return {
             headers: [
-                {name: 'Key', value: 'id', sort: true},
-                {name: 'Subject', value: 'subject', sort: true},
-                {name: 'Priority', value: 'priority_id', sort: true},
-                {name: 'Status', value: 'status_id', sort: true},
-                {name: 'Date', value: 'created_at', sort: true},
-                {name: 'Updated', value: 'updated_at', sort: true},
+                { name: 'Key', value: 'id', sort: true },
+                { name: 'Subject', value: 'subject', sort: true },
+                { name: 'Priority', value: 'priority_id', sort: true },
+                { name: 'Status', value: 'status_id', sort: true },
+                { name: 'Date', value: 'created_at', sort: true },
+                { name: 'Updated', value: 'updated_at', sort: true },
             ],
             user_access: this.$page.props.auth.user.access,
             form: {
@@ -177,20 +205,22 @@ export default {
                 type_id: this.filters.type_id ?? null,
                 category_id: this.filters.category_id ?? null,
                 department_id: this.filters.department_id ?? null,
+                startDate: this.filters.startDate ?? '',  // Start date filter
+                endDate: this.filters.endDate ?? '',      // End date filter
             },
         }
     },
     watch: {
         form: {
             deep: true,
-            handler: throttle(function() {
+            handler: throttle(function () {
                 this.$inertia.get(this.route('tickets'), pickBy(this.form), { replace: true, preserveState: true })
             }, 150),
         },
     },
     methods: {
-        doFilter(e){
-            axios.get(this.route('filter.assignees', {search: e.target.value})).then((res)=>{
+        doFilter(e) {
+            axios.get(this.route('filter.assignees', { search: e.target.value })).then((res) => {
                 this.assignees.splice(0, this.assignees.length, ...res.data);
             })
         },
@@ -201,9 +231,9 @@ export default {
         reset() {
             this.form = mapValues(this.form, () => null)
         },
-        uploadImportCSV(e){
-            if(e.target.files.length){
-                this.$inertia.form({file: e.target.files[0]}).post(this.route('ticket.csv.import'))
+        uploadImportCSV(e) {
+            if (e.target.files.length) {
+                this.$inertia.form({ file: e.target.files[0] }).post(this.route('ticket.csv.import'))
             }
         }
     },

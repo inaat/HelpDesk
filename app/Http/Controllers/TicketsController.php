@@ -93,7 +93,22 @@ class TicketsController extends Controller
         } else {
             $ticketQuery->orderBy('updated_at', 'DESC');
         }
+  // Date filtering
+  $startDate = Request::input('startDate');
+  $endDate = Request::input('endDate');
 
+ // Check for date filtering
+ if ($startDate && $endDate) {
+    $ticketQuery = $ticketQuery->whereBetween('created_at', [
+        $startDate . ' 00:00:00',
+        $endDate . ' 23:59:59'
+    ]);
+} elseif ($startDate) {
+    $ticketQuery = $ticketQuery->where('created_at', '>=', $startDate . ' 00:00:00');
+} elseif ($endDate) {
+    $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate . ' 23:59:59');
+}
+ 
         return Inertia::render('Tickets/Index', [
             'title' => 'Tickets',
             'filters' => Request::all(),
@@ -336,7 +351,7 @@ class TicketsController extends Controller
         } else {
             $byAssign = Request::input('assigned_to');
         }
-        $ticket = Ticket::byCustomer($byCustomer)
+        $ticket = Ticket::byCustomer($byCustomer)->with('user')
             ->byAssign($byAssign)
             ->where(function ($query) use ($uid) {
                 $query->where('uid', $uid);
@@ -357,7 +372,7 @@ class TicketsController extends Controller
        
         return Inertia::render('Tickets/Edit', [
             'hidden_fields' => $hiddenFields ? json_decode($hiddenFields->value) : null,
-            'title' => $ticket->subject ?? '',
+            'title' => '#'.$ticket->uid.'/'.$ticket->subject ?? '',
             'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
                 ->limit(6)
                 ->get()
@@ -514,16 +529,81 @@ class TicketsController extends Controller
         return Redirect::route('tickets.edit', $ticket->uid)->with('success', 'Ticket updated.');
     }
 
-    public function newComment()
-    {
+    // public function newComment()
+    // {
 
         
+    //     $request = Request::all();
+    //     $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
+    //     if (empty($ticket)) {
+    //         event(new TicketNewComment(['ticket_id' => $request['ticket_id'], 'comment' => $request['comment']]));
+    //     }
+
+    //     $newComment = new Comment;
+    //     if (isset($request['user_id'])) {
+    //         $newComment->user_id = $request['user_id'];
+    //     }
+    //     if (isset($request['ticket_id'])) {
+    //         $newComment->ticket_id = $request['ticket_id'];
+    //     }
+    //     $newComment->details = $request['comment'];
+
+    //     // Create a new ticket
+    //     $newComment->save();
+
+    //     $ticket = Ticket::with('user')->find($request['ticket_id']);
+
+    //     // Ensure that both ticket and user exist before accessing properties
+    //     if ($ticket && $ticket->user) {
+    //         $phone = $ticket->user->phone;
+    //         if(!empty($phone)){
+    //         // Sanitize and allow specific HTML tags in the comment (e.g., <img>, <figure>, etc.)
+    //         $allowedTags = '<figure><img><b><i><br>';
+    //         $sanitizedComment = strip_tags($request['comment'], $allowedTags);
+
+    // // Replace &nbsp; with the non-breaking space character
+    //         $sanitizedComment = str_replace('&nbsp;', "\n\n", $sanitizedComment);
+
+    //         // Check if the comment contains an image tag
+    //         if (strpos($sanitizedComment, '<img') !== false) {
+    //             // Extract the image URL from the comment (assuming it's properly formatted)
+    //             preg_match('/<img.*?src=["\'](.*?)["\']/', $sanitizedComment, $matches);
+    //             $imageUrl = isset($matches[1]) ? $matches[1] : null;
+
+    //             if ($imageUrl) {
+    //                 $filePath = public_path($imageUrl);
+    //                 $filename = basename($imageUrl);
+
+    //                // $caption = strip_tags($request['comment']);  // This removes all HTML tags
+
+    //                 // Send the image through WhatsApp API
+    //                 $response = $this->whatsappApiService->sendDocument('888', $filePath, $phone, $filename, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
+                    
+
+    //             } else {
+    //                 // Otherwise, send a text message with the comment
+    //                 $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
+    //             }
+
+    //         }else{
+            
+    //                 // Otherwise, send a text message with the comment
+    //                 $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
+                
+    //         }
+    //     }
+    //     }
+    //     return response()->json($newComment);
+    // }
+    public function newComment()
+    {
         $request = Request::all();
         $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
+    
         if (empty($ticket)) {
             event(new TicketNewComment(['ticket_id' => $request['ticket_id'], 'comment' => $request['comment']]));
         }
-
+    
         $newComment = new Comment;
         if (isset($request['user_id'])) {
             $newComment->user_id = $request['user_id'];
@@ -532,59 +612,78 @@ class TicketsController extends Controller
             $newComment->ticket_id = $request['ticket_id'];
         }
         $newComment->details = $request['comment'];
-
-        // Create a new ticket
+    
         $newComment->save();
-
+    
         $ticket = Ticket::with('user')->find($request['ticket_id']);
-
-        // Ensure that both ticket and user exist before accessing properties
+    
         if ($ticket && $ticket->user) {
             $phone = $ticket->user->phone;
-            if(!empty($phone)){
-            // Sanitize and allow specific HTML tags in the comment (e.g., <img>, <figure>, etc.)
-            $allowedTags = '<figure><img><b><i><br>';
-            $sanitizedComment = strip_tags($request['comment'], $allowedTags);
-
-    // Replace &nbsp; with the non-breaking space character
-            $sanitizedComment = str_replace('&nbsp;', "\n\n", $sanitizedComment);
-
-            // Check if the comment contains an image tag
-            if (strpos($sanitizedComment, '<img') !== false) {
-                // Extract the image URL from the comment (assuming it's properly formatted)
-                preg_match('/<img.*?src=["\'](.*?)["\']/', $sanitizedComment, $matches);
-                $imageUrl = isset($matches[1]) ? $matches[1] : null;
-
-                if ($imageUrl) {
-                    $filePath = public_path($imageUrl);
-                    $filename = basename($imageUrl);
-
-                   // $caption = strip_tags($request['comment']);  // This removes all HTML tags
-
-                    // Send the image through WhatsApp API
-                    $response = $this->whatsappApiService->sendDocument('888', $filePath, $phone, $filename, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
-                    
-
+            $email = $ticket->user->email;
+    
+            if (!empty($phone)) {
+                $allowedTags = '<figure><img><b><i><br>';
+                $sanitizedComment = strip_tags($request['comment'], $allowedTags);
+                $sanitizedComment = str_replace('&nbsp;', "\n\n", $sanitizedComment);
+    
+                if (strpos($sanitizedComment, '<img') !== false) {
+                    preg_match('/<img.*?src=["\'](.*?)["\']/', $sanitizedComment, $matches);
+                    $imageUrl = isset($matches[1]) ? $matches[1] : null;
+    
+                    if ($imageUrl) {
+                        $filePath = public_path($imageUrl);
+                        $filename = basename($imageUrl);
+                        
+                        $response = $this->whatsappApiService->sendDocument(
+                            '888',
+                            $filePath,
+                            $phone,
+                            $filename,
+                            str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment']))
+                        );
+                    } else {
+                        $response = $this->whatsappApiService->sendTestMsg(
+                            '888',
+                            $phone,
+                            str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment']))
+                        );
+                    }
                 } else {
-                    // Otherwise, send a text message with the comment
-                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
+                    $response = $this->whatsappApiService->sendTestMsg(
+                        '888',
+                        $phone,
+                        str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment']))
+                    );
                 }
-
-            }else{
-            
-                    // Otherwise, send a text message with the comment
-                    $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
-                
             }
+    
+            // Send email if email exists
+            if (!empty($email)) {
+
+                $ticket = Ticket::where('id', $newComment->ticket_id)->with(['user','assignedTo','comments'])->first();
+
+  
+                $data = [
+                    'name' => $ticket->user ? $ticket->user->first_name : '',
+                    'email' => $ticket->user ? $ticket->user->email : '',
+                    'comment' => $newComment->details,
+                    'url' => config('app.url') . '/dashboard/tickets/' . $ticket->uid,
+                    'sender_name' => 'Manager',
+                    'uid' => $ticket->uid,
+                ];
+        
+              
+                    dd(\Mail::to($email)->send(new \App\Mail\NewCommentMail( $data)));
+                          }
         }
-        }
+    
         return response()->json($newComment);
     }
-
+    
     function htmlToWhatsApp($html) {
         $dom = new DOMDocument();
         // Suppress errors due to malformed HTML
-        @$dom->loadHTML($html);
+        @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
         
         // This function processes each element recursively
         function processElement($element) {

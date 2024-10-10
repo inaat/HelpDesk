@@ -33,6 +33,7 @@ class CustomersController extends Controller {
                 ->withQueryString()
                 ->through(fn ($user) => [
                     'id' => $user->id,
+                    'customer_no' => $user->customer_no,
                     'name' => $user->name,
                     'city' => $user->city,
                     'country' => $user->country_id ? $user->country->name: null,
@@ -71,6 +72,8 @@ class CustomersController extends Controller {
             'address' => ['nullable'],
             'country_id' => ['nullable'],
             'role_id' => ['nullable'],
+            'customer_no' => ['required','numeric', 'unique:users'],
+
         ]);
         if(Request::file('photo')){
             $userRequest['photo_path'] = Request::file('photo')->store('users');
@@ -106,6 +109,7 @@ class CustomersController extends Controller {
                 'country_id' => $user->country_id,
                 'photo_path' => $user->photo_path,
                 'organization_id' => $user->organization_id,
+                'customer_no'=>$user->customer_no
             ],
             'countries' => Country::orderBy('name')
                 ->get()
@@ -144,9 +148,14 @@ class CustomersController extends Controller {
             'organization_id' => ['required',
                 Rule::exists('organizations', 'id'),
             ],
+           'customer_no' => [
+    'required', 
+    'numeric',
+    'unique:users,customer_no,' . $user->id
+],
         ]);
 
-        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id','organization_id'));
+        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id','organization_id','customer_no'));
 
         if(Request::file('photo')){
             if(isset($user->photo_path) && !empty($user->photo_path) && File::exists(public_path($user->photo_path))){
