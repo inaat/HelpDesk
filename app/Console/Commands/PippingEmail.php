@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Attachment;
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -51,7 +52,7 @@ class PippingEmail extends Command {
                     $body = $message->getHTMLBody();
                     $plainBody = $message->getTextBody(); // Get plain text body
                     $messageId = $message->getMessageId()[0] ?? null;
-
+                    $from= $fromData->mail;
                     if (!empty($messageId)) {
                         $cc = $message->getCc();
                         $assigned_to = null;
@@ -60,7 +61,7 @@ class PippingEmail extends Command {
                             $assignedUser = User::where('email', $cc[0]->mail)->first();
                             $assigned_to = $assignedUser ? $assignedUser->id : null;
                         }
-                        $ticket = $this->createTicket($user, $subject, $body, $plainBody , $assigned_to);
+                        $ticket = $this->createTicket($user, $subject, $body, $plainBody , $assigned_to,  $from);
                         $this->processAttachments($message, $ticket, $user);
                         $message->setFlag('SEEN');
                     }
@@ -93,16 +94,41 @@ class PippingEmail extends Command {
         return $user;
     }
 
-    private function createTicket($user, $subject, $body, $plainBody ,$assigned_to) {
+    private function createTicket($user, $subject, $body, $plainBody ,$assigned_to,$from) {
         $combinedBody = $body . "\n\n" . strip_tags($plainBody); // Use strip_tags to remove HTML from plain body
+        $customer=null;
+        preg_match('/#C(\d+)/', $subject, $matchesCustomer);
+            if (!empty($matchesCustomer)) {
+                $customer_no = str_replace('#C', '', $matchesCustomer[0]);
+                $subject=  str_replace('#C'.$customer_no, '', $subject);
+                $og = Organization::Where('customer_no', $customer_no)->first();
+                
+                if (!empty($og)) {
+                    $user = User::where('organization_id', $og->id)->first();
+                    $customer = $user ? $user : null;
+                }
+            }
+        if(empty($customer)){
+            $customer=$user;
+        }
+        $contact_id=null;
+        if(!empty($from)){
+            $email_array = User::where('role_id', 5)->pluck('email')->toArray();
+            // Check if the mobile number exists in the phone array
+            if (in_array($from, $email_array)) {
+                $contact_id = User::where('email', $from)->first()->id;
+            }
+
+        }
         $ticket = Ticket::factory()->create([
             'subject' => $subject,
             'details' =>     $combinedBody ,
-            'user_id' => $user->id,
+            'user_id' => $customer->id,
             'open' => now(),
             'response' => null,
             'due' => null,
             'assigned_to'=>$assigned_to,
+            'contact_id'=>$contact_id,
             'status_id' => 2,
             'priority_id'=>3,
             'type_id'=>5,
