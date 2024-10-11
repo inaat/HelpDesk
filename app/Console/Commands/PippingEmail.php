@@ -97,7 +97,7 @@ class PippingEmail extends Command {
     private function createTicket($user, $subject, $body, $plainBody ,$assigned_to,$from) {
         $combinedBody = $body . "\n\n" . strip_tags($plainBody); // Use strip_tags to remove HTML from plain body
         $customer=null;
-        preg_match('/#C(\d+)/', $subject, $matchesCustomer);
+        preg_match('/#(\d+)/', $subject, $matchesCustomer);
             if (!empty($matchesCustomer)) {
                 $customer_no = str_replace('#', '', $matchesCustomer[0]);
                 $subject=  str_replace('#'.$customer_no, '', $subject);
