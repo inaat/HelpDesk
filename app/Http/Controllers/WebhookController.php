@@ -133,14 +133,16 @@ class WebhookController extends Controller
                 }
             }
             $assigned_to = null;
+            $assigned_phone = null;
             $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
             // Check if the mobile number exists in the phone array
             if (in_array($mobile_no, $phone_array)) {
                 $assigned_to = User::where('phone', $mobile_no)->first()->id;
+                $assigned_phone =$mobile_no;
             }
 
             $ticket_open = null;
-            $customer_id = null;
+            $customer = null;
             preg_match('/#(\d+)/', $details, $matches);
             preg_match('/#C(\d+)/', $details, $matchesCustomer);
             if (!empty($matchesCustomer)) {
@@ -148,10 +150,10 @@ class WebhookController extends Controller
                 $og = Organization::Where('customer_no', $customer_no)->first();
                 if (!empty($og)) {
                     $user = User::where('organization_id', $og->id)->first();
-                    $customer_id = $user ? $user->id : null;
+                    $customer = $user ? $user : null;
                 }
             }
-            if(empty($customer_id)){
+            if(empty($customer)){
                    // Handle empty fields gracefully
             $user = User::where('phone', $mobile_no)->first();
             if (empty($user)) {
@@ -171,7 +173,7 @@ class WebhookController extends Controller
                 // Create a new user and assign it to the $user variable
                 $user = User::create($userRequest);
             }
-            $customer_id=$user->id;
+            $customer=$user;
             }
             // Check if a match was found and output it
             if (!empty($matches)) {
@@ -198,7 +200,7 @@ class WebhookController extends Controller
             } else {
                 $request_data = [
                     //'user_id' => $user->id,
-                    'user_id' => $customer_id,
+                    'user_id' => $customer->id,
                     'status_id' => 2,
                     'priority_id' => 3,
                     'type_id' => 5,
@@ -214,9 +216,16 @@ class WebhookController extends Controller
                 $ticket->save();
                 $response = $this->whatsappApiService->sendTestMsg(
                     '888',
-                    $user->phone,
-                    "Thank you for contacting us, your ticket has been created with ticket #$ticket->uid.\nWe will get back to you soon."
+                    $customer->phone,
+                    "Your  ticket #$ticket->uid"
                 );
+                if(!empty($assigned_phone)){
+                $response = $this->whatsappApiService->sendTestMsg(
+                    '888',
+                    $user->phone,
+                    "Your  ticket #$ticket->uid"
+                );
+                }
             }
             // Log additional information if needed
 
