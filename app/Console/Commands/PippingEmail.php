@@ -99,8 +99,8 @@ class PippingEmail extends Command {
         $customer=null;
         preg_match('/#C(\d+)/', $subject, $matchesCustomer);
             if (!empty($matchesCustomer)) {
-                $customer_no = str_replace('#C', '', $matchesCustomer[0]);
-                $subject=  str_replace('#C'.$customer_no, '', $subject);
+                $customer_no = str_replace('#', '', $matchesCustomer[0]);
+                $subject=  str_replace('#'.$customer_no, '', $subject);
                 $og = Organization::Where('customer_no', $customer_no)->first();
                 
                 if (!empty($og)) {
