@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -137,7 +138,21 @@ class WebhookController extends Controller
             if (in_array($mobile_no, $phone_array)) {
                 $assigned_to = User::where('phone', $mobile_no)->first()->id;
             }
-            // Handle empty fields gracefully
+
+            $ticket_open = null;
+            $customer_id = null;
+            preg_match('/#(\d+)/', $details, $matches);
+            preg_match('/#C(\d+)/', $details, $matchesCustomer);
+            if (!empty($matchesCustomer)) {
+                $customer_no = str_replace('#C', '', $matches[0]);
+                $og = Organization::Where('customer_no', $customer_no)->first();
+                if (!empty($og)) {
+                    $user = User::where('organization_id', $og->id)->first();
+                    $customer_id = $user ? $user->id : null;
+                }
+            }
+            if(empty($customer_id)){
+                   // Handle empty fields gracefully
             $user = User::where('phone', $mobile_no)->first();
             if (empty($user)) {
                 $userRequest = [
@@ -156,22 +171,22 @@ class WebhookController extends Controller
                 // Create a new user and assign it to the $user variable
                 $user = User::create($userRequest);
             }
-            $ticket_open = null;
-            preg_match('/#(\d+)/', $details, $matches);
+            $customer_id=$user->id;
+            }
             // Check if a match was found and output it
             if (!empty($matches)) {
                 $result = str_replace('#', '', $matches[0]);
 
 
                 \Log::info("The number after # is:$assigned_to " . $result . $details);
-             
+
                 $ticket_open = Ticket::where('uid', $result)->first();
-            }else{
-                 if(empty($ticket_open) && $user->id !=$assigned_to)
-                $ticket_open = Ticket::whereDate('open', Carbon::now()) // Check if 'open' matches the current time
-->whereNull('close')
-->where('user_id' , $user->id)       // Check if 'cloase' is null
-->first();
+            } else {
+                if (empty($ticket_open) && $user->id != $assigned_to)
+                    $ticket_open = Ticket::whereDate('open', Carbon::now()) // Check if 'open' matches the current time
+                        ->whereNull('close')
+                        ->where('user_id', $user->id)       // Check if 'cloase' is null
+                        ->first();
             }
 
             if (!empty($ticket_open)) {
@@ -182,10 +197,11 @@ class WebhookController extends Controller
                 ]);
             } else {
                 $request_data = [
-                    'user_id' => $user->id,
+                    //'user_id' => $user->id,
+                    'user_id' => $customer_id,
                     'status_id' => 2,
-                    'priority_id'=>3,
-                    'type_id'=>5,
+                    'priority_id' => 3,
+                    'type_id' => 5,
                     'assigned_to' => $assigned_to,
                     'subject' => $caption ?: $msgText ?: "No Subject",
                     // Default subject if empty

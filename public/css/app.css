@@ -2542,6 +2542,9 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 .fill-yellow-800{
   fill: #854d0e;
 }
+.fill-yellow-400{
+  fill: #facc15;
+}
 .object-cover{
   -o-object-fit: cover;
      object-fit: cover;
@@ -2975,6 +2978,10 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 .text-yellow-800{
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity));
+}
+.text-yellow-400{
+  --tw-text-opacity: 1;
+  color: rgb(250 204 21 / var(--tw-text-opacity));
 }
 .antialiased{
   -webkit-font-smoothing: antialiased;

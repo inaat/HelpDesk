@@ -91,7 +91,12 @@ private function generateRandomEmail()
     return "{$randomString}@{$domain}";
 }
     public function index()
+    
     {
+        $details='#245888 #C125698';
+        preg_match('/#(\d+)/', $details, $matches1);
+        preg_match('/#C(\d+)/', $details, $matches);
+        dd($matches1,$matches);
     //     $legacyConfig = [
     //         'driver' => 'mysql',
     //         'host' => '127.0.0.1',
@@ -357,8 +362,10 @@ private function generateRandomEmail()
                         'status' => $ticket->status ? $ticket->status->name : null,
                         'due' => $ticket->due,
                         'assigned_to' => $ticket->assignedTo ? $ticket->assignedTo->first_name . ' ' . $ticket->assignedTo->last_name : null,
+                        'from' => $ticket->contact ? $ticket->contact->first_name . ' ' . $ticket->contact->last_name : null,
                         'created_at' => $ticket->created_at,
                         'updated_at' => $ticket->updated_at,
+                        'ticketType' => $ticket->ticketType? $ticket->ticketType->name : null,
                     ];
                 }),
         ]);
