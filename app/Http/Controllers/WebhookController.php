@@ -144,7 +144,7 @@ class WebhookController extends Controller
             preg_match('/#(\d+)/', $details, $matches);
             preg_match('/#C(\d+)/', $details, $matchesCustomer);
             if (!empty($matchesCustomer)) {
-                $customer_no = str_replace('#C', '', $matches[0]);
+                $customer_no = str_replace('#C', '', $matchesCustomer[0]);
                 $og = Organization::Where('customer_no', $customer_no)->first();
                 if (!empty($og)) {
                     $user = User::where('organization_id', $og->id)->first();
