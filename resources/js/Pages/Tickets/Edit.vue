@@ -2,21 +2,19 @@
     <div>
         <Head :title="__(title)" /> 
         <div class="flex flex-wrap">
-            <div class="max-w-full lg:w-2/5">
+            <div class=" lg:w-1/5" style="width:200px;">
                 <form @submit.prevent="update" class="bg-white rounded-md shadow overflow-hidden mr-2">
-                    <div class="p-8 -mr-6 -mb-8 flex flex-wrap">
+                    <div class="p-2 -mr-6 -mb-8 flex flex-wrap">
                         <!--Super Admin -->
                         <select-edit-input v-if="auth.user.role.slug !== 'customer'" placeholder="Search customer" :onInput="doFilter" :items="customers"
                                              v-model="form.user_id" :error="form.errors.user_id"
-                                             class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Customer')"
+                                             class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Customer')"
                                            :value="ticket.user" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
-
-                        <select-edit-input placeholder="Search priority" :items="priorities"
-                                           v-model="form.priority_id" :error="form.errors.priority_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Priority')"
-                                           :value="ticket.priority" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                        <div class="assigned_user pr-6 pb-8 w-full lg:w-3/3 flex flex-col">
+                            <div class="font-bold text-sm mb-1">{{ __('Created') }} </div>
+                            <div class="font-light text-sm">{{ ticket.created_at }}</div>
+                        </div>
                         <select-edit-input 
     v-if="auth.user.role.slug !== 'customer' && !(hidden_fields && hidden_fields.includes('assigned_to'))" 
     placeholder="Search user" 
@@ -24,51 +22,54 @@
     :items="usersExceptCustomers"
     v-model="form.assigned_to" 
     :error="form.errors.assigned_to"
-    class="pr-6 pb-8 w-full lg:w-1/3" 
+    class="pr-6 pb-8 w-full lg:w-3/3" 
     :label="__('Assigned to')"
     :value="ticket.assigned_user ?? 'Not Assigned'" 
     :editable="(auth.user.role.slug === 'admin' || auth.user.role.slug === 'manager') && user_access.ticket.update && !ticket.closed">
 </select-edit-input>
+<select-edit-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
+                                           v-model="form.department_id" :error="form.errors.department_id"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Department')"
+                                           :value="ticket.department" :editable="user_access.ticket.update && !ticket.closed">
+                        </select-edit-input>
                      
+                        <select-edit-input placeholder="Search priority" :items="priorities"
+                                           v-model="form.priority_id" :error="form.errors.priority_id"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Priority')"
+                                           :value="ticket.priority" :editable="user_access.ticket.update && !ticket.closed">
+                        </select-edit-input>
+                      
 
                         <select-edit-input placeholder="Select status to change" :items="statuses"
                                            v-model="form.status_id" :error="form.errors.status_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Status')"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Status')"
                                            :value="ticket.status?ticket.status.name:'N/A'" :editable="auth.user.role.slug !== 'customer' && user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
 
                         <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" placeholder="Search type" :items="types"
                                            v-model="form.type_id" :error="form.errors.type_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Ticket type')"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Ticket type')"
                                            :value="ticket.type" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
 
-                        <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
-                                           v-model="form.department_id" :error="form.errors.department_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Department')"
-                                           :value="ticket.department" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                     
 
-                        <select-edit-input ref="category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.department_id" @change="getSubCategories()" placeholder="Search category" :items="categories"
+                        <!-- <select-edit-input ref="category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.department_id" @change="getSubCategories()" placeholder="Search category" :items="categories"
                                            v-model="form.category_id" :error="form.errors.category_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Category')"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Category')"
                                            :value="ticket.category" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                        </select-edit-input> -->
 
-                        <select-edit-input ref="sub_category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.category_id" placeholder="Search category" :items="sub_categories"
+                        <!-- <select-edit-input ref="sub_category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.category_id" placeholder="Search category" :items="sub_categories"
                                            v-model="form.sub_category_id" :error="form.errors.sub_category_id"
-                                           class="pr-6 pb-8 w-full lg:w-1/3" :label="__('Sub Category')"
+                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Sub Category')"
                                            :value="ticket.sub_category" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                        </select-edit-input> -->
 
-                        <div class="assigned_user pr-6 pb-8 w-full lg:w-1/3 flex flex-col">
-                            <div class="font-bold text-sm mb-1">{{ __('Created') }} </div>
-                            <div class="font-light text-sm">{{ moment(ticket.created_at).fromNow() }}</div>
-                        </div>
+                     
 
-                        <text-edit-input :editable="user_access.ticket.update && !ticket.closed" v-model="form.subject" :value="ticket.subject" :error="form.errors.subject" class="pr-6 pb-8 w-full lg:w-2/3" :label="__('Subject')" />
 
-                        <div class="assigned_user pr-6 pb-8 w-full lg:w-full flex flex-col">
+                        <!-- <div class="assigned_user pr-6 pb-8 w-full lg:w-full flex flex-col">
                             <div class="w-25 flex gap-3">
                                 <label class="form-label" >{{ __('Request Details') }}</label>
                                 <icon v-if="!enableEditor && user_access.ticket.update && !ticket.closed" name="edit" @click="enableEditor=!enableEditor" class="w-4 h-4 mr-1 cursor-pointer" />
@@ -80,27 +81,27 @@
                                     <icon @click="enableEditor=false" name="close" class="w-4 h-4 ml-2 cursor-pointer" />
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
 
                         <!-- Super Admin Comment -->
-                        <input ref="file" type="file" accept=".xlsx,.xls,image/*,.doc, .docx,.ppt, .pptx,.txt,.pdf, .zip" class="hidden" multiple="multiple" @change="fileInputChange" />
+                        <!-- <input ref="file" type="file" accept=".xlsx,.xls,image/*,.doc, .docx,.ppt, .pptx,.txt,.pdf, .zip" class="hidden" multiple="multiple" @change="fileInputChange" /> -->
                         <div class="pr-6 pb-8 w-full lg:w-full flex-col">
-                            <button type="button" class="btn flex justify-center items-center pb-3 border-0 pl-0" @click="fileBrowse">
+                            <!-- <button type="button" class="btn flex justify-center items-center pb-3 border-0 pl-0" @click="fileBrowse">
                                 <icon name="file" class="flex-shrink-0 h-5 fill-gray-400 pr-1" /> <strong>{{ __('Attach File') }}</strong>
-                            </button>
+                            </button> -->
                             <div v-if="attachments.length" class="flex items-center justify-between pr-6 pt-8 w-full" v-for="(file, fi) in attachments" :key="fi">
                                 <div class="flex-1 pr-1">
                                     {{ file.name }} <span class="text-gray-500 text-xs">({{ getFileSize(file.size) }})</span> <a v-if="file.user" class="text-sm" :href="this.route('users.edit', file.user.id)">{{ file.user.first_name }} {{ file.user.last_name }}</a> at <span class="text-sm">{{ file.created_at }}</span>
                                 </div>
                                 <div class="a__buttons flex justify-end items-center ">
-                                    <button type="button" class="btn flex items-center " @click="downloadAttachment(file)">
-                                        {{ __('Download') }}</button>
-                                    <button type="button" class="btn flex items-center ml-3" @click="removeAttachment(file, fi)">
-                                        {{ __('Remove') }}</button>
+                                    <!-- <button type="button" class="btn flex items-center " @click="downloadAttachment(file)">
+                                        {{ __('Download') }}</button> -->
+                                    <!-- <button type="button" class="btn flex items-center ml-3" @click="removeAttachment(file, fi)">
+                                        {{ __('Remove') }}</button> -->
                                         <button type="button" class="btn flex items-center ml-3" @click="viewAttachment(file)">
-        {{ __('View') }}
-    </button>
+                                        {{ __('View') }}
+                                    </button>
                                 </div>
                             </div>
                             <div v-if="form.files.length" class="flex items-center justify-between pr-6 pt-8 w-full lg:w-1/2" v-for="(file, fi) in form.files" :key="fi">
@@ -139,19 +140,21 @@
                             <div class="flex lg:w-1/4 mb-4"><button class="btn-indigo" type="submit">{{ __('Submit') }}</button></div>
                         </div>
                     </div>
-                    <div class="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center">
-                        <button v-if="user_access.ticket.delete" class="text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">
+                    <div class="p-2  bg-gray-50 border-t border-gray-100 ">
+                        <button v-if="user_access.ticket.delete" class="btn text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">
                             {{ __('Delete') }}</button>
-                        <loading-button :loading="form.processing" class="btn-indigo ml-auto" type="submit">{{ __('Save') }}</loading-button>
+                        </div>
+                        <div class="p-2 bg-gray-50 border-t border-gray-100 ">
+                        <loading-button :loading="form.processing" class="btn-indigo" type="submit">{{ __('Save') }}</loading-button>
                     </div>
                 </form>
             </div>
-            <div class="max-w-full lg:w-3/5">
+            <div class="max-w-full lg:w-4/5">
                 <div class="bg-white rounded-md shadow overflow-hidden ml-2 chat-area comment-box flex-1 flex flex-col">
                     <div class="flex-3">
                         <div class="chat-header flex flex-col pb-3">
-                            <h3 class="text-xl">{{ __('Ticket discussion') }}</h3>
-                            <p class="text-sm font-light">{{ __('Comment histories for this ticket will be available here.') }}</p>
+                                    <text-edit-input :editable="user_access.ticket.update && !ticket.closed" v-model="form.subject" :value="ticket.subject" :error="form.errors.subject" class=" w-full" :label="__('Subject')" />
+                            
                         </div>
                     </div>
                     
@@ -207,8 +210,11 @@
                 </div>
             </div>
         </div>
+
+    </div>
+    
          <!-- Modal for viewing files -->
-<div v-if="showModal" class="flex items-center justify-center bg-black bg-opacity-50 z-50">
+         <!-- <div v-if="showModal" class="flex items-center justify-center bg-black bg-opacity-50 z-50">
     <div class="bg-white p-4 rounded shadow-lg max-w-full lg:w-3/5">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-bold">{{ selectedFile ? selectedFile.name : 'File Viewer' }}</h3>
@@ -243,9 +249,7 @@
             </button>
         </div>
     </div>
-</div>
-    </div>
-
+</div> -->
 </template>
 
 <script>

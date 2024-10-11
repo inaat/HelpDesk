@@ -71,11 +71,11 @@
           <div class="md:flex-1 md:overflow-y-auto" scroll-region>
               <div class="container-head">
                   <div class="ch-left">
-                      <h1 class="page-title">{{ __(title) }}</h1>
+                      <!-- <h1 class="page-title">{{ __(title) }}</h1> -->
                       <div class="breadcrumb text-sm">
                           <Link :href="route('dashboard')"><icon class="w-3 h-3" name="home" /></Link>
                           <span class="b-item">/</span>
-                          <Link v-if="edit_route" :href="route(edit_route)" class="capitalize">{{ edit_route }}</Link>
+                          <Link v-if="edit_route" :href="route(edit_route)" class="capitalize">{{ edit_route === 'organizations' ? 'customers' : edit_route }}</Link> 
                           <span v-if="edit_route" class="b-item">/</span>
                           <span class="b-item">{{ __(title) }}</span>
                       </div>

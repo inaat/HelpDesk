@@ -102,7 +102,10 @@ class PippingEmail extends Command {
             'open' => now(),
             'response' => null,
             'due' => null,
-            'assigned_to'=>$assigned_to
+            'assigned_to'=>$assigned_to,
+            'status_id' => 2,
+            'priority_id'=>3,
+            'type_id'=>5,
         ]);
 
         $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);

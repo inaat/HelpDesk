@@ -11,6 +11,7 @@ use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Department;
+use App\Models\Organization;
 use App\Models\PendingEmail;
 use App\Models\Priority;
 use App\Models\Review;
@@ -20,6 +21,7 @@ use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\Type;
 use App\Models\User;
+use DB;
 use DOMDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -43,9 +45,211 @@ class TicketsController extends Controller
         // Inject the WhatsappApiService dependency
         $this->whatsappApiService = $whatsappApiService;
     }
+    function extractAndReplaceMobileNumber($input)
+    {
+        // Initialize variables to hold extracted values
+        $mobile_no = null;
+        $email = null;
+    
+        // Check for a sequence of 10 or more consecutive digits (mobile number)
+        if (preg_match('/\d{10,}/', $input, $matches)) {
+            $mobile_no = $matches[0]; // Extract the mobile number
+    
+            // Replace the found mobile number with an empty string
+            $input = str_replace($mobile_no, '', $input);
+        }
+    
+        // Check for a valid email address
+        if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $input, $matches)) {
+            $email = $matches[0]; // Extract the email
+            // Replace the found email address with an empty string
+            $input = str_replace($email, '', $input);
+        }
+    
+        // Extract username by trimming the new string
+        $user_name = trim($input);
+    
+        // Return an associative array with user_name, mobile_no, and email
+        return [
+            'user_name' => $user_name,
+            'mobile_no' => $mobile_no,
+            'email' => $email,
+        ];
+    }
+    /**
+ * Generate a random email based on the user name.
+ *
+ * @return string
+ */
+private function generateRandomEmail()
+{
+    // Generate a random string for the email prefix
+    $randomString = bin2hex(random_bytes(5)); // Generates a random string of 10 characters
+    $domain = 'example.com'; // Change this to your preferred domain
+
+    // Construct the email
+    return "{$randomString}@{$domain}";
+}
     public function index()
     {
-     
+    //     $legacyConfig = [
+    //         'driver' => 'mysql',
+    //         'host' => '127.0.0.1',
+    //         'port' => '3306',
+    //         'database' => 'acctginjazat',
+    //         'username' => 'root',
+    //         'password' => '',
+    //         'charset' => 'utf8',
+    //         'collation' => 'utf8_unicode_ci',
+    //     ];
+
+    //     config(['database.connections.dynamic_mysql' => $legacyConfig]);
+
+    //     $connection1 = DB::connection('dynamic_mysql');
+    //     $customers = $connection1->table('ar_customer_ms')->where('status', 'A')->get();
+    //     $companies = [];
+
+    //     foreach ($customers as $key => $value) {
+    //         // Retrieve address, handling null with optional chaining
+    //         $address = $connection1->table('t_customer_vendor_addresses')
+    //             ->where('cust_vendor_id', $value->cust_id)
+    //             ->where('type', 'C')
+    //             ->first();
+
+    //         if (!$address) {
+    //             continue; // Skip this customer if no address found
+    //         }
+    //         $users = [];
+
+    //         $fields = [
+    //             'contact_person_1' => $address->contact_person_1,
+    //             'contact_person_2' => $address->contact_person_2,
+    //             'add_1' => $address->add_1,
+    //             'add_2' => $address->add_2,
+    //             'add_3' => $address->add_3,
+    //             'add_4' => $address->add_4,
+    //             'phone_1' => $address->phone_1,
+    //             'phone_2' => $address->phone_2,
+    //             'phone_3' => $address->phone_3,
+    //             'fax_1' => $address->fax_1,
+    //             'fax_2' => $address->fax_2,
+    //             'mobile_1' => $address->mobile_1,
+    //             'mobile_2' => $address->mobile_2,
+    //             'web_site' => $address->web_site,
+    //         ];
+        
+    //         $users = []; // Initialize the users array
+    //         $emailList = []; // Initialize an array to hold extracted emails
+            
+    //         // Loop through each field and apply the extraction function
+    //         foreach ($fields as $key => $value1) {
+    //             // Check if the field is a valid string before processing
+    //             if (is_string($value1)) {
+    //                 // Extract user info from the value
+    //                 $result = $this->extractAndReplaceMobileNumber($value1);
+                    
+    //                 // Store user data
+    //                 $users[] = $result;
+                    
+    //                 // Check if an email was found and add it to the email list
+    //                 if (!empty($result['email'])) {
+    //                     $emailList[] = $result['email'];
+    //                 }
+                    
+    //                 if (!empty($address->email) ) {
+    //                     $emailList[] = $address->email;
+    //                 }
+                    
+    //             }
+    //         }
+            
+    //         // Convert the email list to a comma-separated string
+    //         $emailString = implode(',', $emailList);
+    //               // Combine existing email from $address with the new emails
+    //          $email = !empty($address->email) ? trim($address->email) . ',' . $emailString : $emailString;
+
+    //         // Retrieve city, handle null if city is not found
+    //         $m_city = $connection1->table('m_city')
+    //             ->where('city_id', $address->city_id)
+    //             ->first();
+
+    //         // // Check if the organization already exists
+    //          $existingOrg = Organization::where('customer_no', $value->cust_id)->first();
+    //         if(!empty( $existingOrg)){
+    //             $customerRole = Role::where('slug', 'customer')->first();
+               
+    //                 $role_id = $customerRole->id;
+             
+    //             foreach($users as $user){
+    //                 if (empty($user['user_name']) && empty($user['mobile_no']) && empty($user['email']) || 
+    //                 is_numeric($user['user_name'])) {
+    //                     continue; // Skip this user
+    //                 }
+    //                 $generatedEmail=!empty($user['email']) ? $user['email'] : $this->generateRandomEmail();
+    //                   // Check if the email already exists in the users table
+    //                     if (User::where('email', $generatedEmail)->exists()) {
+    //                         continue; // Skip creating the user if the email already exists
+    //                     }
+    //                 $userRequest = [
+    //                     'first_name' => !empty($user['user_name']) ? $user['user_name'] : '___', // Default to '___' if user_name is empty
+    //                     'last_name' => '__',
+    //                     'phone' => isset($user['mobile_no']) && strlen($user['mobile_no']) > 9
+    //                     ? '966' . ltrim($user['mobile_no'], '0')
+    //                     : ($user['mobile_no'] ?? $existingOrg->phone),
+    //                     'organization_id' =>  $existingOrg->id,
+    //                     'email' => $generatedEmail ,
+    //                     'password' => '',
+    //                     'city' => $existingOrg->city,
+    //                     'address' =>$existingOrg->address,
+    //                     'country_id' =>   $existingOrg->country,
+    //                     'role_id' => $role_id,
+            
+    //                 ];
+    //                 User::create( $userRequest);
+    //             }
+               
+               
+    //         }
+    //         // // Only create a new organization if it doesn't already exist
+    //         // if (!$existingOrg) {
+           
+    //         $organization = [
+    //             'name' => $value->cust_name_arabic ?? 'N/A',
+    //             'name_en' => $value->cust_name_english ?? 'N/A',
+    //             'customer_no' => $value->cust_id ?? 'N/A',
+    //             'email' =>  $email ,
+    //             'phone' => isset($address->mobile_1) && strlen($address->mobile_1) > 9
+    //                 ? '966' . ltrim($address->mobile_1, '0')
+    //                 : ($address->mobile_1 ?? 'N/A'),
+    //             'address' => $address->add_1 ?? 'N/A',
+    //             'city' => $m_city->city_name_ara ?? 'N/A',
+    //             'region' => $address->state_region ?? 'N/A',
+    //             'country' => 195, // Default country ID
+    //             'postal_code' => $address->postal_code ?? 'N/A',
+    //             'contact_person_1' => $address->contact_person_1,
+    //             'contact_person_2' => $address->contact_person_2,
+    //             'add_1' => $address->add_1,
+    //             'add_2' => $address->add_2,
+    //             'add_3' => $address->add_3,
+    //             'add_4' => $address->add_4,
+    //             'phone_1' => $address->phone_1,
+    //             'phone_2' => $address->phone_2,
+    //             'phone_3' => $address->phone_3,
+    //             'fax_1' => $address->fax_1,
+    //             'fax_2' => $address->fax_2,
+    //             'mobile_1' => $address->mobile_1,
+    //             'mobile_2' => $address->mobile_2,
+    //             'web_site' => $address->web_site,
+    //         ];
+    //        // Organization::create( $organization );
+    //         $companies[] = ['organization' => $organization, 'users' => $users];
+    //        // dd($companies);
+    //     }
+    //    // }
+
+
+
+    //      dd($companies);
         $byCustomer = null;
         $byAssign = null;
         $user = Auth()->user();
@@ -93,22 +297,22 @@ class TicketsController extends Controller
         } else {
             $ticketQuery->orderBy('updated_at', 'DESC');
         }
-  // Date filtering
-  $startDate = Request::input('startDate');
-  $endDate = Request::input('endDate');
+        // Date filtering
+        $startDate = Request::input('startDate');
+        $endDate = Request::input('endDate');
 
- // Check for date filtering
- if ($startDate && $endDate) {
-    $ticketQuery = $ticketQuery->whereBetween('created_at', [
-        $startDate . ' 00:00:00',
-        $endDate . ' 23:59:59'
-    ]);
-} elseif ($startDate) {
-    $ticketQuery = $ticketQuery->where('created_at', '>=', $startDate . ' 00:00:00');
-} elseif ($endDate) {
-    $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate . ' 23:59:59');
-}
- 
+        // Check for date filtering
+        if ($startDate && $endDate) {
+            $ticketQuery = $ticketQuery->whereBetween('created_at', [
+                $startDate . ' 00:00:00',
+                $endDate . ' 23:59:59'
+            ]);
+        } elseif ($startDate) {
+            $ticketQuery = $ticketQuery->where('created_at', '>=', $startDate . ' 00:00:00');
+        } elseif ($endDate) {
+            $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate . ' 23:59:59');
+        }
+
         return Inertia::render('Tickets/Index', [
             'title' => 'Tickets',
             'filters' => Request::all(),
@@ -369,16 +573,16 @@ class TicketsController extends Controller
         }
 
         $roles = Role::pluck('id', 'slug')->all();
-       
+
         return Inertia::render('Tickets/Edit', [
             'hidden_fields' => $hiddenFields ? json_decode($hiddenFields->value) : null,
-            'title' => '#'.$ticket->uid.'/'.$ticket->subject ?? '',
+            'title' => '#' . $ticket->uid . '/' . $ticket->subject ?? '',
             'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::where('role_id',999)->where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
+            'usersExceptCustomers' => User::where('role_id', 999)->where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
                 ->limit(6)
                 ->get()
                 ->map
@@ -505,7 +709,7 @@ class TicketsController extends Controller
                 'user_id' => $user['id']
             ]);
             $this->sendMailCron($ticket->id, 'response', Request::input('comment'));
-        }    
+        }
 
         $removedFiles = Request::input('removedFiles');
         if (!empty($removedFiles)) {
@@ -532,7 +736,7 @@ class TicketsController extends Controller
     // public function newComment()
     // {
 
-        
+
     //     $request = Request::all();
     //     $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
     //     if (empty($ticket)) {
@@ -578,7 +782,7 @@ class TicketsController extends Controller
 
     //                 // Send the image through WhatsApp API
     //                 $response = $this->whatsappApiService->sendDocument('888', $filePath, $phone, $filename, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
-                    
+
 
     //             } else {
     //                 // Otherwise, send a text message with the comment
@@ -586,10 +790,10 @@ class TicketsController extends Controller
     //             }
 
     //         }else{
-            
+
     //                 // Otherwise, send a text message with the comment
     //                 $response = $this->whatsappApiService->sendTestMsg('888', $phone, str_replace('&nbsp;', "\n\n", $this->htmlToWhatsApp($request['comment'])));
-                
+
     //         }
     //     }
     //     }
@@ -599,11 +803,11 @@ class TicketsController extends Controller
     {
         $request = Request::all();
         $ticket = Comment::where('ticket_id', $request['ticket_id'])->count();
-    
+
         if (empty($ticket)) {
             event(new TicketNewComment(['ticket_id' => $request['ticket_id'], 'comment' => $request['comment']]));
         }
-    
+
         $newComment = new Comment;
         if (isset($request['user_id'])) {
             $newComment->user_id = $request['user_id'];
@@ -612,28 +816,28 @@ class TicketsController extends Controller
             $newComment->ticket_id = $request['ticket_id'];
         }
         $newComment->details = $request['comment'];
-    
+
         $newComment->save();
-    
+
         $ticket = Ticket::with('user')->find($request['ticket_id']);
-    
+
         if ($ticket && $ticket->user) {
             $phone = $ticket->user->phone;
             $email = $ticket->user->email;
-    
+
             if (!empty($phone)) {
                 $allowedTags = '<figure><img><b><i><br>';
                 $sanitizedComment = strip_tags($request['comment'], $allowedTags);
                 $sanitizedComment = str_replace('&nbsp;', "\n\n", $sanitizedComment);
-    
+
                 if (strpos($sanitizedComment, '<img') !== false) {
                     preg_match('/<img.*?src=["\'](.*?)["\']/', $sanitizedComment, $matches);
                     $imageUrl = isset($matches[1]) ? $matches[1] : null;
-    
+
                     if ($imageUrl) {
                         $filePath = public_path($imageUrl);
                         $filename = basename($imageUrl);
-                        
+
                         $response = $this->whatsappApiService->sendDocument(
                             '888',
                             $filePath,
@@ -656,13 +860,13 @@ class TicketsController extends Controller
                     );
                 }
             }
-    
+
             // Send email if email exists
             if (!empty($email)) {
 
-                $ticket = Ticket::where('id', $newComment->ticket_id)->with(['user','assignedTo','comments'])->first();
+                $ticket = Ticket::where('id', $newComment->ticket_id)->with(['user', 'assignedTo', 'comments'])->first();
 
-  
+
                 $data = [
                     'name' => $ticket->user ? $ticket->user->first_name : '',
                     'email' => $ticket->user ? $ticket->user->email : '',
@@ -671,30 +875,32 @@ class TicketsController extends Controller
                     'sender_name' => 'Manager',
                     'uid' => $ticket->uid,
                 ];
-        
-              
-                    dd(\Mail::to($email)->send(new \App\Mail\NewCommentMail( $data)));
-                          }
+
+
+                dd(\Mail::to($email)->send(new \App\Mail\NewCommentMail($data)));
+            }
         }
-    
+
         return response()->json($newComment);
     }
-    
-    function htmlToWhatsApp($html) {
+
+    function htmlToWhatsApp($html)
+    {
         $dom = new DOMDocument();
         // Suppress errors due to malformed HTML
         @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-        
+
         // This function processes each element recursively
-        function processElement($element) {
+        function processElement($element)
+        {
             $result = '';
-    
+
             foreach ($element->childNodes as $child) {
                 switch ($child->nodeType) {
                     case XML_TEXT_NODE:
                         $result .= $child->nodeValue;
                         break;
-    
+
                     case XML_ELEMENT_NODE:
                         switch ($child->nodeName) {
                             case 'br':
@@ -738,54 +944,58 @@ class TicketsController extends Controller
                         break;
                 }
             }
-    
+
             return trim($result);
         }
-    
+
         // Process ordered and unordered lists
-        function processListElement($list) {
+        function processListElement($list)
+        {
             $result = "\n";
             $isOrdered = $list->nodeName === 'ol';
             $counter = 1;
-    
+
             foreach ($list->getElementsByTagName('li') as $item) {
                 $bullet = $isOrdered ? "$counter. " : '• ';
                 $result .= $bullet . processElement($item) . "\n";
-                if ($isOrdered) $counter++;
+                if ($isOrdered)
+                    $counter++;
             }
-    
+
             return $result . "\n";
         }
-    
+
         // Process tables
-        function processTableElement($table) {
+        function processTableElement($table)
+        {
             $headers = [];
             $rows = [];
-    
+
             // Extract headers
             foreach ($table->getElementsByTagName('th') as $th) {
                 $headers[] = trim($th->nodeValue);
             }
-    
+
             // Extract rows
             foreach ($table->getElementsByTagName('tr') as $tr) {
                 $row = [];
                 foreach ($tr->getElementsByTagName('td') as $td) {
                     $row[] = trim($td->nodeValue);
                 }
-                if (count($row) > 0) $rows[] = $row;
+                if (count($row) > 0)
+                    $rows[] = $row;
             }
-    
+
             // Calculate column widths
             $colWidths = array_map(function ($h, $i) use ($rows) {
                 return max(strlen($h), ...array_map(function ($r) use ($i) {
                     return isset($r[$i]) ? strlen($r[$i]) : 0;
                 }, $rows));
             }, $headers, array_keys($headers));
-    
+
             // Create the table
             $result = "```\n";
-            
+
             // Add headers
             if (count($headers) > 0) {
                 $result .= implode(' | ', array_map(function ($h, $w) {
@@ -795,18 +1005,18 @@ class TicketsController extends Controller
                     return str_repeat('-', $w);
                 }, $colWidths)) . "\n";
             }
-    
+
             // Add rows
             foreach ($rows as $row) {
                 $result .= implode(' | ', array_map(function ($cell, $w) {
                     return str_pad($cell, $w);
                 }, $row, $colWidths)) . "\n";
             }
-    
+
             $result .= "```\n";
             return $result;
         }
-    
+
         return processElement($dom->documentElement);
     }
     public function destroy(Ticket $ticket)

@@ -10,7 +10,7 @@
     <div class="bg-white rounded-md shadow overflow-x-auto">
       <table class="w-full whitespace-nowrap">
         <tr class="text-left font-bold">
-          <th class="pb-4 pt-6 px-6">{{ __('Customer No') }}</th>
+          <th class="pb-4 pt-6 px-6">{{ __('Customer') }}</th>
           <th class="pb-4 pt-6 px-6">{{ __('Name') }}</th>
           <th class="pb-4 pt-6 px-6">{{ __('Email') }}</th>
           <th class="pb-4 pt-6 px-6">{{ __('Phone') }}</th>
@@ -20,7 +20,7 @@
         <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
           <td class="border-t">
             <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('customers.edit',user.id)">
-              {{ user.customer_no }}
+              {{ user.organization}}
             </Link>
           </td>
           <td class="border-t">

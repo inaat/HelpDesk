@@ -52,6 +52,10 @@ class User extends Authenticatable
         return $this->belongsTo(Country::class, 'country_id');
     }
 
+    public function organization(){
+        return $this->belongsTo(Organization::class, 'organization_id');
+    }
+
 //    public function city(){
 //        return $this->belongsTo(City::class, 'city_id');
 //    }

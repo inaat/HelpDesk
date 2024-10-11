@@ -5,20 +5,32 @@
         <search-input v-model="form.search" class="mr-4 w-full max-w-md" @reset="reset"></search-input>
       <Link class="btn-indigo" :href="route('organizations.create')">
         <span>{{ __('Create') }}</span>
-        <span class="hidden md:inline"> {{ __('Organization') }} </span>
+        <span class="hidden md:inline"> {{ __('Customers') }} </span>
       </Link>
     </div>
     <div class="bg-white rounded-md shadow overflow-x-auto">
       <table class="w-full whitespace-nowrap">
         <thead>
           <tr class="text-left font-bold">
-            <th class="pb-4 pt-6 px-6">{{ __('Name') }}</th>
+            <th class="pb-4 pt-6 px-6">{{ __('Customer No') }}</th>
+            <th class="pb-4 pt-6 px-6">{{ __('Name En') }}</th>
+            <th class="pb-4 pt-6 px-6">{{ __('Name Ar') }}</th>
             <th class="pb-4 pt-6 px-6">{{ __('City') }}</th>
             <th class="pb-4 pt-6 px-6" colspan="2">{{ __('Phone') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="organization in organizations.data" :key="organization.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
+            <td class="border-t">
+            <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('organizations.edit',organization.id)">
+              {{ organization.customer_no }}
+            </Link>
+          </td>
+            <td class="border-t">
+              <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('organizations.edit', organization.id)">
+                {{ organization.name_en }}
+              </Link>
+            </td>
             <td class="border-t">
               <Link class="flex items-center px-6 py-4 focus:text-indigo-500" :href="route('organizations.edit', organization.id)">
                 {{ organization.name }}
@@ -41,7 +53,7 @@
             </td>
           </tr>
           <tr v-if="organizations.data.length === 0">
-            <td class="px-6 py-4 border-t" colspan="4">{{ __('No organizations found.') }}</td>
+            <td class="px-6 py-4 border-t" colspan="4">{{ __('No customers found.') }}</td>
           </tr>
         </tbody>
       </table>

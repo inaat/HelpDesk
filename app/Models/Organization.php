@@ -16,9 +16,8 @@ class Organization extends Model
 
     public function contacts()
     {
-        return $this->hasMany(Contact::class);
+        return $this->hasMany(User::class, 'organization_id');
     }
-
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {

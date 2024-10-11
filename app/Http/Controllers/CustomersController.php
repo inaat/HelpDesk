@@ -33,10 +33,10 @@ class CustomersController extends Controller {
                 ->withQueryString()
                 ->through(fn ($user) => [
                     'id' => $user->id,
-                    'customer_no' => $user->customer_no,
                     'name' => $user->name,
                     'city' => $user->city,
                     'country' => $user->country_id ? $user->country->name: null,
+                    'organization' => $user->organization ? $user->organization->name.' ' .$user->organization->name_en: null,
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,
@@ -63,7 +63,7 @@ class CustomersController extends Controller {
     public function store(){
         $userRequest = Request::validate([
             'first_name' => ['required', 'max:50'],
-            'last_name' => ['required', 'max:50'],
+            'last_name' => ['nullable'],
             'phone' => ['nullable', 'max:25'],
             'organization_id' => ['required',Rule::exists('organizations', 'id')],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
@@ -72,7 +72,7 @@ class CustomersController extends Controller {
             'address' => ['nullable'],
             'country_id' => ['nullable'],
             'role_id' => ['nullable'],
-            'customer_no' => ['required','numeric', 'unique:users'],
+         
 
         ]);
         if(Request::file('photo')){
@@ -136,7 +136,7 @@ class CustomersController extends Controller {
 
         Request::validate([
             'first_name' => ['required', 'max:50'],
-            'last_name' => ['required', 'max:50'],
+            'last_name' => ['nullable'],
             'phone' => ['nullable', 'max:25'],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable'],
@@ -148,14 +148,10 @@ class CustomersController extends Controller {
             'organization_id' => ['required',
                 Rule::exists('organizations', 'id'),
             ],
-           'customer_no' => [
-    'required', 
-    'numeric',
-    'unique:users,customer_no,' . $user->id
-],
+  
         ]);
 
-        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id','organization_id','customer_no'));
+        $user->update(Request::only('first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id', 'role_id','organization_id'));
 
         if(Request::file('photo')){
             if(isset($user->photo_path) && !empty($user->photo_path) && File::exists(public_path($user->photo_path))){

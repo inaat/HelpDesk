@@ -77,9 +77,9 @@ export default {
         if(enable_option.kb && (user_access.knowledge_base.read || user_access.knowledge_base.update || user_access.knowledge_base.create || user_access.knowledge_base.delete)){
             this.menu_items.push({'name': 'Knowledge Base', 'route': 'knowledge_base', 'url': 'knowledge_base', 'icon': 'knowledge'})
         }
-
+        ///
         if(user_access.customer.read || user_access.customer.update || user_access.customer.create || user_access.customer.delete){
-            this.menu_items.push({'name': 'Contacts', 'route': 'customers', 'url': 'customers', 'icon': 'all_users'})
+            this.menu_items.push({'name': 'Contacts', 'route': 'customers', 'url': 'customers', 'icon': 'contact'})
         }
 
         if(enable_option.note){
@@ -91,7 +91,7 @@ export default {
         // }
 
         if(enable_option.organization && (user_access.organization.read || user_access.organization.update || user_access.organization.create || user_access.organization.delete)){
-            this.menu_items.push({'name': 'Customers', 'route': 'organizations', 'url': 'organizations', 'icon': 'office'})
+            this.menu_items.push({'name': 'Customers', 'route': 'organizations', 'url': 'organizations', 'icon': 'all_users'})
         }
 
         if(user_access.user.read || user_access.user.update || user_access.user.create || user_access.user.delete){
