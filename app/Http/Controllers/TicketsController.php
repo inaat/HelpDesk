@@ -93,10 +93,10 @@ private function generateRandomEmail()
     public function index()
     
     {
-        $details='#245888 #C125698';
-        preg_match('/#(\d+)/', $details, $matches1);
-        preg_match('/#C(\d+)/', $details, $matches);
-        dd($matches1,$matches);
+        // $details='#245888 #C125698';
+        // preg_match('/#(\d+)/', $details, $matches1);
+        // preg_match('/#C(\d+)/', $details, $matches);
+        // dd($matches1,$matches);
     //     $legacyConfig = [
     //         'driver' => 'mysql',
     //         'host' => '127.0.0.1',
