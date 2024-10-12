@@ -584,11 +584,22 @@ private function generateRandomEmail()
         return Inertia::render('Tickets/Edit', [
             'hidden_fields' => $hiddenFields ? json_decode($hiddenFields->value) : null,
             'title' => '#' . $ticket->uid . '/' . $ticket->subject ?? '',
-            'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
-                ->limit(6)
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'customers' => User::with('organization') // Eager load the organization relationship
+            ->where('role_id', $roles['customer'] ?? 0)
+            ->orWhere('id', Request::input('customer_id'))
+            //->orderBy('first_name')
+            ->limit(6)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+              // Concatenate organization customer number, organization name, user name, and phone number
+            'name' => ($user->organization 
+            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+            : '') . 
+            $user->name . ' ' . $user->phone,
+                ];
+            }),
             'usersExceptCustomers' => User::where('role_id', 999)->where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
                 ->limit(6)
                 ->get()

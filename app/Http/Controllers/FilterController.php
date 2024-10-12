@@ -9,17 +9,43 @@ use Illuminate\Support\Facades\Request;
 
 class FilterController extends Controller {
     //
-    public function customers(){
+    public function customers()
+    {
         $customerRole = Role::where('slug', 'customer')->first();
-        $customers = User::where('role_id', $customerRole ? $customerRole->id: 0)
-            ->filter(Request::only('search'))
-            ->limit(6)
+    
+        // Get the search query from the request
+        $searchQuery = Request::input('search');
+    
+        // Fetch customers
+        $customers = User::with('organization')
+            ->where('role_id', $customerRole ? $customerRole->id : 0)
+            ->when($searchQuery, function ($query, $searchQuery) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->whereHas('organization', function ($orgQuery) use ($searchQuery) {
+                        // Search by organization customer number or name
+                        $orgQuery->where('customer_no', 'LIKE', '%' . $searchQuery . '%')
+                                 ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
+                    });
+                });
+              //  ->orWhere('name', 'LIKE', '%' . $searchQuery . '%') // Also search by user name
+               // ->orWhere('phone', 'LIKE', '%' . $searchQuery . '%'); // And phone number
+            })
+            ->limit(30)
             ->get()
-            ->map
-            ->only('id', 'name');
-
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    // Concatenate organization customer number, organization name, user name, and phone number
+                    'name' => ($user->organization 
+                        ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+                        : '') . 
+                        $user->name . ' ' . $user->phone,
+                ];
+            });
+    
         return response()->json($customers);
     }
+    
 
     public function assignees(){
 
