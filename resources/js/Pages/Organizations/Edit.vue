@@ -3,7 +3,7 @@
 
     <Head :title="title" />
     <div class="flex flex-wrap">
-      <div class="lg:w-2/5">
+      <div class="lg:w-3/5">
         <div class="max-w-full bg-white rounded-md shadow overflow-hidden">
           <form @submit.prevent="update">
             <div class="flex flex-wrap -mb-8 -mr-6 p-8">
@@ -11,17 +11,21 @@
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.customer_no" :error="form.errors.customer_no" type="number"
                   class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Customer No')" />
-                <text-input v-model="form.name" :error="form.errors.name" class="pb-8 pr-6 w-full lg:w-1/3"
+                <text-input v-model="form.name" :error="form.errors.name" class="pb-8 pr-6 w-full lg:w-2/3"
                   :label="__('Name')" />
+               
+              </div>
+              <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.email" :error="form.errors.email" type="email"
-                  class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Email')" />
+                  class="pb-8 pr-6 w-full lg:w-2/3" :label="__('Email')" />
+                  <text-input v-model="form.phone" :error="form.errors.phone" type="tel" class="pb-8 pr-6 w-full lg:w-1/3"
+                  :label="__('Phone')" />
               </div>
 
               <!-- Address Details -->
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
-                <text-input v-model="form.phone" :error="form.errors.phone" type="tel" class="pb-8 pr-6 w-full lg:w-1/3"
-                  :label="__('Phone')" />
-                <text-input v-model="form.address" :error="form.errors.address" class="pb-8 pr-6 w-full lg:w-1/3"
+               
+                <text-input v-model="form.address" :error="form.errors.address" class="pb-8 pr-6 w-full lg:w-2/3"
                   :label="__('Address')" />
                 <text-input v-model="form.city" :error="form.errors.city" class="pb-8 pr-6 w-full lg:w-1/3"
                   :label="__('City')" />
@@ -31,27 +35,32 @@
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.region" :error="form.errors.region" class="pb-8 pr-6 w-full lg:w-1/3"
                   :label="__('Province/State')" />
-                <select-input v-model="form.country" :error="form.errors.country" class="pb-8 pr-6 w-full lg:w-1/3"
+                <select-input v-model="form.country" :error="form.errors.country" class="pb-8 pr-6 w-full lg:w-2/3"
                   :label="__('Country')">
                   <option :value="null" />
                   <option v-for="c in countries" :key="c.id" :value="c.id">{{ __(c.name) }}</option>
                 </select-input>
+             
+              </div>
+              <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.postal_code" :error="form.errors.postal_code"
-                  class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Postal Code')" />
+                class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Postal Code')" />
+                <text-input v-model="form.web_site" :error="form.errors.web_site" type="url"
+                class="pb-8 pr-6 w-full lg:w-2/3" :label="__('Website')" />
               </div>
 
               <!-- Contact Persons -->
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.contact_person_1" :error="form.errors.contact_person_1"
-                  class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Contact Person 1')" />
+                  class="pb-8 pr-6 w-full lg:w-3/3" :label="__('Contact Person 1')" />
                 <text-input v-model="form.contact_person_2" :error="form.errors.contact_person_2"
-                  class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Contact Person 2')" />
+                  class="pb-8 pr-6 w-full lg:w-3/3" :label="__('Contact Person 2')" />
+                 
               </div>
 
               <!-- Additional Contact Information -->
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
-                <text-input v-model="form.web_site" :error="form.errors.web_site" type="url"
-                  class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Website')" />
+               
               </div>
             </div>
 
@@ -66,14 +75,14 @@
           </form>
         </div>
       </div>
-      <div class="max-w-full lg:w-3/5 " >
+      <div class="max-w-full lg:w-2/5 " >
       
         <div class="bg-white rounded-md shadow overflow-hidden ml-2 chat-area comment-box flex-1 flex flex-col">
           <h2 class=" text-2xl font-bold">{{ __('Contacts') }}</h2>
           <table class="w-full whitespace-nowrap">
             <tr class="text-left font-bold">
               <th class="pb-4 pt-6 px-6">{{ __('Name') }}</th>
-              <th class="pb-4 pt-6 px-6">{{ __('City') }}</th>
+            
               <th class="pb-4 pt-6" colspan="2">{{ __('Phone') }}</th>
             </tr>
             <tr v-for="contact in organization.contacts" :key="contact.id"
@@ -84,11 +93,7 @@
                 {{ contact.name }}
                 </Link>
               </td>
-              <td class="border-t">
-                <Link class="flex items-center px-6 py-4" :href="route('customers.edit', contact.id)" tabindex="-1">
-                {{ contact.city }}
-                </Link>
-              </td>
+           
               <td class="border-t">
                 <Link class="flex items-center px-6 py-4" :href="route('customers.edit', contact.id)" tabindex="-1">
                 {{ contact.phone }}

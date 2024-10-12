@@ -1,6 +1,7 @@
 <template>
   <div>
     <Head :title="title" />
+    
     <div class="flex items-center justify-between mb-6">
         <search-input v-model="form.search" class="mr-4 w-full max-w-md" @reset="reset"></search-input>
       <Link class="btn-indigo" :href="route('organizations.create')">
