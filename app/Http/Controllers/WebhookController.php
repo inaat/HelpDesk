@@ -173,11 +173,10 @@ class WebhookController extends Controller
 
                 // Create a new user and assign it to the $user variable
                 $user = User::create($userRequest);
+            }
+            $customer=$user;
             }else{
                 $assigned_phone =$mobile_no;
-            }
-
-            $customer=$user;
             }
             // Check if a match was found and output it
             if (!empty($matches)) {
