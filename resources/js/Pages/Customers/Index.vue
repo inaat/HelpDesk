@@ -46,7 +46,7 @@
             </td>
             <td class="border-t">
                 <Link class="flex items-center px-6 py-4" :href="route('customers.edit',user.id)" tabindex="-1">
-                    {{ __(user.created_at) }}
+                    {{ user.created_at }}
                 </Link>
             </td>
           <td class="w-px border-t">

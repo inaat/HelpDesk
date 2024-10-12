@@ -4,6 +4,10 @@
     <div class="max-w-full bg-white rounded-md shadow overflow-hidden">
       <form @submit.prevent="update">
         <div class="flex flex-wrap -mb-8 -mr-6 p-8">
+          <select-input v-model="form.department_id" :error="form.errors.department_id" class="pb-8 pr-6 w-full lg:w-1/2" :label="__('Departments')">
+            <option :value="null" />
+            <option v-for="department in departments" :key="department.id" :value="department.id">{{ department.name }}</option>
+          </select-input>
           <text-input v-model="form.first_name" :error="form.errors.first_name" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('First name')" />
           <text-input v-model="form.last_name" :error="form.errors.last_name" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Last name')" />
           <text-input v-model="form.email" :error="form.errors.email" class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Email')" />
@@ -56,6 +60,7 @@ export default {
     countries: Array,
     roles: Array,
     cities: Array,
+    departments: Array,
     title: String,
   },
   remember: 'form',
@@ -74,6 +79,7 @@ export default {
         password: '',
         role: this.user.role,
         role_id: this.user.role_id,
+        department_id: this.user.department_id,
         photo: null
       }),
     }

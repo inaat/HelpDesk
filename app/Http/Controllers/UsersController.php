@@ -10,6 +10,7 @@ use App\Models\Blog;
 use App\Models\City;
 use App\Models\Comment;
 use App\Models\Country;
+use App\Models\Department;
 use App\Models\Message;
 use App\Models\Note;
 use App\Models\Participant;
@@ -41,11 +42,13 @@ class UsersController extends Controller{
                 ->map
                 ->only('id', 'name'),
             'users' => User::orderByName()
+               ->where('role_id','!=',2)
                 ->filter(Request::all(['search','role_id']))
                 ->paginate(10)
                 ->withQueryString()
                 ->through(fn ($user) => [
                     'id' => $user->id,
+                    'department' => $user->department ? $user->department->name: null,
                     'name' => $user->name,
                     'country' => $user->country_id ? $user->country->name: null,
                     'city' => $user->city,
@@ -61,6 +64,10 @@ class UsersController extends Controller{
         return Inertia::render('Users/Create',[
             'title' => 'Create a new user',
             'roles' => Role::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
+                'departments' => Department::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -86,6 +93,7 @@ class UsersController extends Controller{
             'address' => ['nullable'],
             'country_id' => ['nullable'],
             'role_id' => ['nullable'],
+            'department_id' => ['required',Rule::exists('departments', 'id')],
         ]);
 
         if(Request::file('photo')){
@@ -136,8 +144,13 @@ class UsersController extends Controller{
                 'country_id' => $user->country_id,
                 'photo' => $user->photo_path ?? null,
                 'photo_path' => $user->photo_path ?? null,
+                'department_id' => $user->department_id,
             ],
             'countries' => Country::orderBy('name')
+                ->get()
+                ->map
+                ->only('id', 'name'),
+                'departments' => Department::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
@@ -163,9 +176,12 @@ class UsersController extends Controller{
             'address' => ['nullable'],
             'country_id' => ['nullable'],
             'photo' => ['nullable', 'image'],
+            'department_id' => ['required',
+            Rule::exists('departments', 'id'),
+        ],
         ]);
 
-        $user->update(Request::only(['first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id']));
+        $user->update(Request::only(['first_name', 'last_name', 'phone', 'email', 'city', 'address', 'country_id','department_id']));
 
         if(!empty(Request::get('role_id'))){
             $user->update(['role_id' => Request::get('role_id')]);

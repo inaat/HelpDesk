@@ -78,7 +78,8 @@ class User extends Authenticatable
     }
 
     public function getCreatedAtAttribute($date){
-        return Carbon::parse($date)->format('jS F, Y');
+        return Carbon::parse($date)->format('j n, Y g:i A');
+
     }
 
     public function role() {
@@ -157,5 +158,9 @@ class User extends Authenticatable
         })->when($filters['role_id'] ?? null, function ($query, $role_id) {
             $query->whereRoleId($role_id);
         });
+    }
+    
+    public function department(){
+        return $this->belongsTo(Department::class, 'department_id');
     }
 }

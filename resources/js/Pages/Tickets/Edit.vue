@@ -13,7 +13,7 @@
                         </select-edit-input>
                         <div class="assigned_user pr-6 pb-8 w-full lg:w-3/3 flex flex-col">
                             <div class="font-bold text-sm mb-1">{{ __('Created') }} </div>
-                            <div class="font-light text-sm">{{ ticket.created_at }}</div>
+                            <div class="font-light text-sm">{{ formatDateTime(ticket.created_at) }}</div>
                         </div>
                         <select-edit-input 
     v-if="auth.user.role.slug !== 'customer' && !(hidden_fields && hidden_fields.includes('assigned_to'))" 

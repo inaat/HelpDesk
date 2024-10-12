@@ -59,7 +59,7 @@ class PippingEmail extends Command {
                         
                         if (!empty($cc) && isset($cc[0]->mail)) {
                             $assignedUser = User::where('email', $cc[0]->mail)->first();
-                            $assigned_to = $assignedUser ? $assignedUser->id : null;
+                            $assigned_to = $assignedUser ;
                         }
                         $ticket = $this->createTicket($user, $subject, $body, $plainBody , $assigned_to,  $from);
                         $this->processAttachments($message, $ticket, $user);
@@ -127,8 +127,9 @@ class PippingEmail extends Command {
             'open' => now(),
             'response' => null,
             'due' => null,
-            'assigned_to'=>$assigned_to,
+            'assigned_to'=> $assigned_to ? $assigned_to->id : null,
             'contact_id'=>$contact_id,
+            'department_id' =>$assigned_to ? $assigned_to->department_id : null,
             'status_id' => 2,
             'priority_id'=>3,
             'type_id'=>5,

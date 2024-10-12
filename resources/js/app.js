@@ -29,6 +29,7 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .mixin({ methods: { route : route } })
             .mixin(require('./base'))
+           // .mixin(require('./utils'))
             .use(plugin)
             .use(Donut)
             .mount(el)

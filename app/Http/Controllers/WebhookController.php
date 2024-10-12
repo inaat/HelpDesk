@@ -137,7 +137,7 @@ class WebhookController extends Controller
             $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
             // Check if the mobile number exists in the phone array
             if (in_array($mobile_no, $phone_array)) {
-                $assigned_to = User::where('phone', $mobile_no)->first()->id;
+                $assigned_to = User::where('phone', $mobile_no)->first();
                 $assigned_phone =$mobile_no;
             }
 
@@ -201,10 +201,11 @@ class WebhookController extends Controller
                 $request_data = [
                     //'user_id' => $user->id,
                     'user_id' => $customer->id,
+                    'department_id' =>$assigned_to ? $assigned_to->department_id : null,
                     'status_id' => 2,
                     'priority_id' => 3,
                     'type_id' => 5,
-                    'assigned_to' => $assigned_to,
+                    'assigned_to' => $assigned_to ? $assigned_to->id : null,
                     'subject' => $caption ?: $msgText ?: "No Subject",
                     // Default subject if empty
                     'details' => $details,

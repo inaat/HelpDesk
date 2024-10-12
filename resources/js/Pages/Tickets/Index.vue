@@ -138,15 +138,15 @@
                     <td class="border-t">
                         <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
                             :href="route('tickets.edit', ticket.uid || ticket.id)">
-                        {{ __('error') === 'error' ? moment(ticket.created_at).format('DD MM YYYY, h:mm') :
-                            moment(ticket.created_at).format('DD MM YYYY, h:mm') }}
+                        {{ __('error') === 'error' ? formatDateTime(ticket.created_at) :
+                           formatDateTime(ticket.created_at) }}
                         </Link>
                     </td>
                     <td class="border-t">
                         <Link class="flex items-center px-6 py-4 focus:text-indigo-500"
                             :href="route('tickets.edit', ticket.uid || ticket.id)">
-                        {{ __('error') === 'error' ? moment(ticket.updated_at).format('DD MM YYYY, h:mm') :
-                            moment(ticket.updated_at).format('DD MMM YYYY, h:mm') }}
+                        {{ __('error') === 'error' ? formatDateTime(ticket.updated_at) :
+                           formatDateTime(ticket.updated_at) }}
                         </Link>
                     </td>
                 </tr>
@@ -172,7 +172,6 @@ import SearchInput from '@/Shared/SearchInput'
 import SelectInputFilter from '@/Shared/SelectInputFilter'
 import moment from 'moment'
 import axios from 'axios'
-
 export default {
     metaInfo: { title: 'Tickets' },
     components: {
