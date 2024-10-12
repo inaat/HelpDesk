@@ -21,10 +21,11 @@ class OrganizationsController extends Controller
 
     public function index()
     {
+  
         return Inertia::render('Organizations/Index', [
             'title' => 'Customers',
             'filters' => Request::all('search'),
-            'organizations' => Organization::orderBy('name')
+            'organizations' => Organization::orderBy('customer_no')
                 ->filter(Request::only('search'))
                 ->paginate(8)
                 ->withQueryString()

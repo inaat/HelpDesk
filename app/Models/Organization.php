@@ -21,7 +21,13 @@ class Organization extends Model
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
-            $query->where('name', 'like', '%'.$search.'%');
+            // Grouping the where clauses
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                      ->orWhere('customer_no', 'like', '%' . $search . '%')
+                      ->orWhere('name_en', 'like', '%' . $search . '%');
+            });
         });
     }
+    
 }

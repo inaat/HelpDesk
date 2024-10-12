@@ -26,7 +26,7 @@ class CustomersController extends Controller {
         return Inertia::render('Customers/Index', [
             'title' => 'Customers',
             'filters' => Request::all(['search']),
-            'users' => User::orderByName()
+            'users' => User::orderBy('organization_id')
                 ->whereRoleId($customerRole ? $customerRole->id : 0)
                 ->filter(Request::all(['search']))
                 ->paginate(10)
@@ -36,7 +36,7 @@ class CustomersController extends Controller {
                     'name' => $user->name,
                     'city' => $user->city,
                     'country' => $user->country_id ? $user->country->name: null,
-                    'organization' => $user->organization ? $user->organization->name.' ' .$user->organization->name_en: null,
+                    'organization' => $user->organization ? $user->organization->customer_no.' '.$user->organization->name.' ' .$user->organization->name_en: null,
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,

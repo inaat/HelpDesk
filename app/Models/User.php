@@ -147,13 +147,32 @@ class User extends Authenticatable
         return ucfirst($this->first_name) . ' ' . ucfirst($this->last_name);
     }
 
+    // public function scopeFilter($query, array $filters) {
+    //     $query->when($filters['search'] ?? null, function ($query, $search) {
+    //         $query->where(function ($query) use ($search) {
+    //             $query->where('first_name', 'like', '%'.$search.'%')
+    //                 ->orWhere('last_name', 'like', '%'.$search.'%')
+    //                 ->orWhere('phone', 'like', '%'.$search.'%')
+    //                 ->orWhere('email', 'like', '%'.$search.'%');
+    //         });
+    //     })->when($filters['role_id'] ?? null, function ($query, $role_id) {
+    //         $query->whereRoleId($role_id);
+    //     });
+    // }
     public function scopeFilter($query, array $filters) {
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $query->where(function ($query) use ($search) {
+                // Filtering user attributes
                 $query->where('first_name', 'like', '%'.$search.'%')
-                    ->orWhere('last_name', 'like', '%'.$search.'%')
-                    ->orWhere('phone', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%');
+                      ->orWhere('last_name', 'like', '%'.$search.'%')
+                      ->orWhere('phone', 'like', '%'.$search.'%')
+                      ->orWhere('email', 'like', '%'.$search.'%')
+                      // Filtering organization attributes
+                      ->orWhereHas('organization', function ($query) use ($search) {
+                          $query->where('name', 'like', '%'.$search.'%')
+                                ->orWhere('customer_no', 'like', '%'.$search.'%')
+                                ->orWhere('name_en', 'like', '%'.$search.'%');
+                      });
             });
         })->when($filters['role_id'] ?? null, function ($query, $role_id) {
             $query->whereRoleId($role_id);
