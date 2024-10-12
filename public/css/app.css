@@ -6212,3 +6212,6 @@ body .dark .sec_chat .sidebar .chat-left-aside .c-top .about .name {
   --tw-bg-opacity: 1 !important;
   background-color: rgb(225 29 72 / var(--tw-bg-opacity)) !important;
 }
+.img.chat-message{
+  width: 280px;
+}

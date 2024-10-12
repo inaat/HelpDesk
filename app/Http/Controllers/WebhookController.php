@@ -125,7 +125,7 @@ class WebhookController extends Controller
 
                     // Save the image
                     file_put_contents($filePath, $imageData);
-                    $details .= "<p>{$caption}<img src=\"/files/kb/{$fileName}\"></p><a href=\"{$customUrl}\">open</a>";
+                    $details .= "<p>{$caption}<img class='chat-message' src=\"/files/kb/{$fileName}\"></p><a href=\"{$customUrl}\">open</a>";
                     // Log the success of saving the image
                     \Log::info('Image saved to:', [$filePath]);
                 } else {
