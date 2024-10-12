@@ -134,11 +134,12 @@ class WebhookController extends Controller
             }
             $assigned_to = null;
             $assigned_phone = null;
+          
             $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
             // Check if the mobile number exists in the phone array
             if (in_array($mobile_no, $phone_array)) {
                 $assigned_to = User::where('phone', $mobile_no)->first();
-                $assigned_phone =$mobile_no;
+                
             }
 
             $ticket_open = null;
@@ -172,7 +173,10 @@ class WebhookController extends Controller
 
                 // Create a new user and assign it to the $user variable
                 $user = User::create($userRequest);
+            }else{
+                $assigned_phone =$mobile_no;
             }
+
             $customer=$user;
             }
             // Check if a match was found and output it
@@ -223,7 +227,7 @@ class WebhookController extends Controller
                 if(!empty($assigned_phone)){
                 $response = $this->whatsappApiService->sendTestMsg(
                     '888',
-                    $user->phone,
+                    $assigned_phone,
                     "Your  ticket #$ticket->uid"
                 );
                 }
