@@ -630,7 +630,12 @@ private function generateRandomEmail()
                 'uid' => $ticket->uid,
                 'user_id' => $ticket->user_id,
                 'contact_id' => $ticket->contact_id,
-                'user' => $ticket->user ? $ticket->user->name : 'N/A',
+               'user' => $ticket->user 
+        ? $ticket->user->name . 
+          ($ticket->user->organization 
+              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name . ')' 
+              : '') 
+        : 'N/A',
                 'contact' => $ticket->contact ?: null,
                 'priority_id' => $ticket->priority_id,
                 'created_at' => $ticket->created_at,
