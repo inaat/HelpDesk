@@ -354,7 +354,12 @@ private function generateRandomEmail()
                         'id' => $ticket->id,
                         'uid' => $ticket->uid,
                         'subject' => $ticket->subject,
-                        'user' => $ticket->user ? $ticket->user->first_name . ' ' . $ticket->user->last_name : null,
+                        'user' => $ticket->user 
+                        ? $ticket->user->name . 
+                          ($ticket->user->organization 
+                              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name . ')' 
+                              : '') 
+                        : 'N/A',
                         'priority' => $ticket->priority ? $ticket->priority->name : null,
                         'category' => $ticket->category ? $ticket->category->name : null,
                         'sub_category' => $ticket->subCategory ? $ticket->subCategory->name : null,
