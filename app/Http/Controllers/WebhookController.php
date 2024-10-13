@@ -207,11 +207,11 @@ class WebhookController extends Controller
                 $request_data = [
                     //'user_id' => $user->id,
                     'user_id' => $customer ? $customer->id : null,
-                    'department_id' => $assigned_to ? $assigned_to->department_id : null,
+                    'department_id' => $assigned_to ? $assigned_to->department_id : 2,
                     'status_id' => 2,
                     'priority_id' => 3,
                     'type_id' => 5,
-                    'assigned_to' => $assigned_to ? $assigned_to->id : null,
+                    'assigned_to' => $assigned_to ? $assigned_to->id :1,
                     'subject' => $caption ?: $msgText ?: "No Subject",
                     // Default subject if empty
                     'details' => $details,
