@@ -75,7 +75,7 @@
                       <div class="breadcrumb text-sm">
                           <Link :href="route('dashboard')"><icon class="w-3 h-3" name="home" /></Link>
                           <span class="b-item">/</span>
-                          <Link v-if="edit_route" :href="route(edit_route)" class="capitalize">{{ edit_route === 'organizations' ? 'customers' : edit_route }}</Link> 
+                          <Link v-if="edit_route" :href="route(edit_route)" class="capitalize">{{ linkText }}</Link>
                           <span v-if="edit_route" class="b-item">/</span>
                           <span class="b-item">{{ __(title) }}</span>
                       </div>
@@ -148,7 +148,16 @@ export default {
         },
         languages_except_selected(){
             return this.$page.props.languages.filter(language => language.code !== this.$page.props.locale)
-        }
+        },
+        linkText() {
+      if (this.edit_route === 'organizations') {
+        return 'customers';
+      } else if (this.edit_route === 'customers') {
+        return 'contacts';
+      }
+      return this.edit_route;
+    }
+  
     },
     methods:{
         generateGreetings(){

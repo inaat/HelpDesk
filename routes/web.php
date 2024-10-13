@@ -421,6 +421,9 @@ Route::prefix('dashboard')->group(function () {
     Route::delete('settings/departments/{department}', [DepartmentsController::class, 'destroy'])
         ->name('departments.destroy')
         ->middleware('auth');
+        Route::get('get-organization', [FilterController::class, 'getOrganization'])
+        ->name('get.organization')
+        ->middleware('auth');
 // End - Departments
 
 

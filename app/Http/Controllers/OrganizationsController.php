@@ -62,6 +62,7 @@ class OrganizationsController extends Controller
         Organization::create(
             Request::validate([
                 'name' => ['required', 'max:100'],
+                'name_en' => ['required', 'max:100'],
                 'email' => ['nullable', 'max:50', 'email'],
                 'phone' => ['nullable', 'max:50'],
                 'address' => ['nullable', 'max:150'],
@@ -105,6 +106,7 @@ class OrganizationsController extends Controller
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
+                'name_en' => $organization->name_en,
                 'email' => $organization->email,
                 'phone' => $organization->phone,
                 'address' => $organization->address,
@@ -137,6 +139,7 @@ class OrganizationsController extends Controller
         $organization->update(
             Request::validate([
                 'name' => ['required', 'max:100'],
+                'name_en' => ['required', 'max:100'],
                 'email' => ['nullable'],
                 'phone' => ['nullable', 'max:50'],
                 'address' => ['nullable', 'max:150'],
@@ -166,20 +169,20 @@ class OrganizationsController extends Controller
             ])
         );
 
-        return Redirect::back()->with('success', 'Organization updated.');
+        return Redirect::back()->with('success', 'Customer updated.');
     }
 
     public function destroy(Organization $organization)
     {
         $organization->delete();
 
-        return Redirect::route('organizations')->with('success', 'Organization deleted.');
+        return Redirect::route('organizations')->with('success', 'Customer deleted.');
     }
 
     public function restore(Organization $organization)
     {
         $organization->restore();
 
-        return Redirect::back()->with('success', 'Organization restored.');
+        return Redirect::back()->with('success', 'Customer restored.');
     }
 }

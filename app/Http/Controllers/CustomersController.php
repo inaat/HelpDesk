@@ -24,7 +24,7 @@ class CustomersController extends Controller {
     public function index(){
         $customerRole = Role::where('slug', 'customer')->first();
         return Inertia::render('Customers/Index', [
-            'title' => 'Customers',
+            'title' => 'Contacts',
             'filters' => Request::all(['search']),
             'users' => User::orderBy('organization_id')
                 ->whereRoleId($customerRole ? $customerRole->id : 0)
@@ -49,10 +49,16 @@ class CustomersController extends Controller {
 
     public function create(){
         return Inertia::render('Customers/Create',[
-            'title' => 'Create a new customer',
-            'organizations' => Organization::orderBy('name')
-                ->get() ->map
-                ->only('id', 'name'),
+            'title' => 'Create a new contact',
+            'organizations' => Organization::orderBy('customer_no')
+              
+            ->get()
+            ->map(function ($organization) {
+                return [
+                    'id' => $organization->id,
+                    'name' => '('.$organization->customer_no . ')' .$organization->name . ' ' . $organization->name_en,
+                ];
+            }),
             'countries' => Country::orderBy('name')
                 ->get()
                 ->map
@@ -85,7 +91,7 @@ class CustomersController extends Controller {
         }
         User::create($userRequest);
 
-        return Redirect::route('customers')->with('success', 'User created.');
+        return Redirect::route('customers')->with('success', 'Contact created.');
     }
 
     public function edit(User $user)
@@ -115,10 +121,15 @@ class CustomersController extends Controller {
                 ->get()
                 ->map
                 ->only('id', 'name'),
-                'organizations' => Organization::orderBy('name')
+               'organizations' => Organization::orderBy('customer_no')
+              
                 ->get()
-                ->map
-                ->only('id', 'name'),
+                ->map(function ($organization) {
+                    return [
+                        'id' => $organization->id,
+                        'name' => '('.$organization->customer_no . ')' .$organization->name . ' ' . $organization->name_en,
+                    ];
+                }),
             'cities' => City::orderBy('name')
                 ->get()
                 ->map
@@ -164,20 +175,20 @@ class CustomersController extends Controller {
             $user->update(['password' => Request::get('password')]);
         }
 
-        return Redirect::back()->with('success', 'Customer updated.');
+        return Redirect::back()->with('success', 'Contact updated.');
     }
 
     public function destroy(User $user)
     {
         if (config('app.demo')) {
-            return Redirect::back()->with('error', 'Deleting customer is not allowed for the live demo.');
+            return Redirect::back()->with('error', 'Deleting contact is not allowed for the live demo.');
         }
 
         $user->delete();
-        return Redirect::route('customers')->with('success', 'Customer deleted.');
+        return Redirect::route('customers')->with('success', 'Contact deleted.');
     }
     public function restore(User $user){
         $user->restore();
-        return Redirect::back()->with('success', 'Customer restored!');
+        return Redirect::back()->with('success', 'Contact restored!');
     }
 }

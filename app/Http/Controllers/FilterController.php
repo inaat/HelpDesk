@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -77,4 +78,20 @@ class FilterController extends Controller {
             ->only('id', 'name');
         return response()->json($customers);
     }
-}
+    public function getOrganization()
+    {
+        // Check if organization_id is provided
+        if (request()->has('organization_id')) { // Use request() helper
+            // Fetch the specific organization by organization_id
+            $organization = Organization::find(request()->organization_id);
+    
+            if ($organization) {
+                return response()->json($organization);
+            }
+    
+            return response()->json(['message' => 'Organization not found.'], 404);
+        }
+    
+        // If organization_id is not provided, return a message
+        return response()->json(['message' => 'No organization ID provided.'], 400);
+    }}

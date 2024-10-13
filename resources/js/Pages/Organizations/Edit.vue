@@ -11,12 +11,18 @@
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.customer_no" :error="form.errors.customer_no" type="number"
                   class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Customer No')" />
-                <text-input v-model="form.name" :error="form.errors.name" class="pb-8 pr-6 w-full lg:w-2/3"
-                  :label="__('Name')" />
+                <text-input v-model="form.name_en" :error="form.errors.name_en" class="pb-8 pr-6 w-full lg:w-2/3"
+                  :label="__('Name En')" />
                
               </div>
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
-                <text-input v-model="form.email" :error="form.errors.email" type="email"
+                
+                <text-input v-model="form.name" :error="form.errors.name" class="pb-8 pr-6 w-full lg:w-3/3"
+                  :label="__('Name Ar')" />
+               
+              </div>
+              <div class="flex flex-wrap -mb-8 -mr-6 w-full">
+                <text-input v-model="form.email" :error="form.errors.email" type="text"
                   class="pb-8 pr-6 w-full lg:w-2/3" :label="__('Email')" />
                   <text-input v-model="form.phone" :error="form.errors.phone" type="tel" class="pb-8 pr-6 w-full lg:w-1/3"
                   :label="__('Phone')" />
@@ -45,7 +51,7 @@
               <div class="flex flex-wrap -mb-8 -mr-6 w-full">
                 <text-input v-model="form.postal_code" :error="form.errors.postal_code"
                 class="pb-8 pr-6 w-full lg:w-1/3" :label="__('Postal Code')" />
-                <text-input v-model="form.web_site" :error="form.errors.web_site" type="url"
+                <text-input v-model="form.web_site" :error="form.errors.web_site" type="text"
                 class="pb-8 pr-6 w-full lg:w-2/3" :label="__('Website')" />
               </div>
 
@@ -66,10 +72,10 @@
 
             <div class="flex items-center px-8 py-4 bg-gray-50 border-t border-gray-100">
               <button class="text-red-600 hover:underline" type="button" @click="destroy">
-                {{ __('Delete Organization') }}
+                {{ __('Delete Customer ') }}
               </button>
               <loading-button :loading="form.processing" class="btn-indigo ml-auto" type="submit">
-                {{ __('Update Organization') }}
+                {{ __('Update Customer ') }}
               </loading-button>
             </div>
           </form>
@@ -143,6 +149,7 @@ export default {
     return {
       form: this.$inertia.form({
         name: this.organization.name,
+        name_en: this.organization.name_en,
         email: this.organization.email,
         phone: this.organization.phone,
         address: this.organization.address,
@@ -165,6 +172,7 @@ export default {
         mobile_1: this.organization.mobile_1, // New field
         mobile_2: this.organization.mobile_2, // New field
         web_site: this.organization.web_site, // New field
+       
       }),
     }
   },
