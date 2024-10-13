@@ -170,8 +170,8 @@ import Pagination from '@/Shared/Pagination'
 import SelectInput from '@/Shared/SelectInput'
 import SearchInput from '@/Shared/SearchInput'
 import SelectInputFilter from '@/Shared/SelectInputFilter'
-import moment from 'moment'
 import axios from 'axios'
+
 export default {
     metaInfo: { title: 'Tickets' },
     components: {
@@ -254,8 +254,6 @@ export default {
             }
         }
     },
-    created() {
-        this.moment = moment;
-    }
+   
 }
 </script>

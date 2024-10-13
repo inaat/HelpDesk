@@ -1,4 +1,4 @@
-const moment = require('moment');
+const moment1 = require('moment');
 
 module.exports = {
     methods: {
@@ -18,7 +18,7 @@ module.exports = {
         },
         formatDate(date, dateFormat = 'DD-MM-YYYY') {
             if (!date) return null;
-            const momentDate = moment(date);
+            const momentDate = moment1(date);
             
             
             return momentDate.format(dateFormat);
@@ -27,7 +27,7 @@ module.exports = {
           formatTime(date, use24HourFormat = false) {
             if (!date) return null;
             const timeFormat = use24HourFormat ? 'HH:mm' : 'hh:mm A';
-            return moment(date).format(timeFormat);
+            return moment1(date).format(timeFormat);
           },
         formatDateTime(date, dateFormat = 'DD-MM-YYYY', use24HourFormat = false) {
             if (!date) return null; 
