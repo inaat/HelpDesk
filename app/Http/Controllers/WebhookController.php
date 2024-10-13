@@ -193,7 +193,7 @@ class WebhookController extends Controller
                         ->whereNull('close')
                         ->where('user_id', $user->id)       // Check if 'cloase' is null
                         ->first();
-                        \Log::info("close # is:$assigned_to " . $ticket_open->id . $ticket_open->close);
+                    
 
             }
 
