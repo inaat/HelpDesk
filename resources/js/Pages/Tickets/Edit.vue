@@ -8,47 +8,48 @@
                         <!--Super Admin -->
                         <select-edit-input v-if="auth.user.role.slug !== 'customer'" placeholder="Search customer" :onInput="doFilter" :items="customers"
                                              v-model="form.user_id" :error="form.errors.user_id"
-                                             class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Customer')"
+                                             class=" w-full lg:w-3/3" :label="__('Customer')"
                                            :value="ticket.user" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
-                        <div class="assigned_user pr-6 pb-8 w-full lg:w-3/3 flex flex-col">
+                   
+                        <div class="assigned_user   w-full lg:w-3/3 flex flex-col">
                             <div class="font-bold text-sm mb-1">{{ __('Created') }} </div>
                             <div class="font-light text-sm">{{ formatDateTime(ticket.created_at) }}</div>
                         </div>
-                        <select-edit-input 
-    v-if="auth.user.role.slug !== 'customer' && !(hidden_fields && hidden_fields.includes('assigned_to'))" 
-    placeholder="Search user" 
-    :onInput="doFilterUsersExceptCustomer" 
-    :items="usersExceptCustomers"
-    v-model="form.assigned_to" 
-    :error="form.errors.assigned_to"
-    class="pr-6 pb-8 w-full lg:w-3/3" 
-    :label="__('Assigned to')"
-    :value="ticket.assigned_user ?? 'Not Assigned'" 
-    :editable="(auth.user.role.slug === 'admin' || auth.user.role.slug === 'manager') && user_access.ticket.update && !ticket.closed">
-</select-edit-input>
-<select-edit-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
+                    <select-edit-input 
+                    v-if="auth.user.role.slug !== 'customer' && !(hidden_fields && hidden_fields.includes('assigned_to'))" 
+                    placeholder="Search user" 
+                    :onInput="doFilterUsersExceptCustomer" 
+                    :items="usersExceptCustomers"
+                    v-model="form.assigned_to" 
+                    :error="form.errors.assigned_to"
+                    class=" w-full lg:w-3/3" 
+                    :label="__('Assigned to')"
+                    :value="ticket.assigned_user ?? 'Not Assigned'" 
+                    :editable="(auth.user.role.slug === 'admin' || auth.user.role.slug === 'manager') && user_access.ticket.update && !ticket.closed">
+                    </select-edit-input>
+                    <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
                                            v-model="form.department_id" :error="form.errors.department_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Department')"
+                                           class=" w-full lg:w-3/3" :label="__('Department')"
                                            :value="ticket.department" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
                      
                         <select-edit-input placeholder="Search priority" :items="priorities"
                                            v-model="form.priority_id" :error="form.errors.priority_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Priority')"
+                                           class=" w-full lg:w-3/3" :label="__('Priority')"
                                            :value="ticket.priority" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
                       
 
                         <select-edit-input placeholder="Select status to change" :items="statuses"
                                            v-model="form.status_id" :error="form.errors.status_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Status')"
+                                           class=" w-full lg:w-3/3" :label="__('Status')"
                                            :value="ticket.status?ticket.status.name:'N/A'" :editable="auth.user.role.slug !== 'customer' && user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
 
                         <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" placeholder="Search type" :items="types"
                                            v-model="form.type_id" :error="form.errors.type_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Ticket type')"
+                                           class=" w-full lg:w-3/3" :label="__('Ticket type')"
                                            :value="ticket.type" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
 
@@ -56,20 +57,20 @@
 
                         <!-- <select-edit-input ref="category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.department_id" @change="getSubCategories()" placeholder="Search category" :items="categories"
                                            v-model="form.category_id" :error="form.errors.category_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Category')"
+                                           class=" w-full lg:w-3/3" :label="__('Category')"
                                            :value="ticket.category" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input> -->
 
                         <!-- <select-edit-input ref="sub_category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.category_id" placeholder="Search category" :items="sub_categories"
                                            v-model="form.sub_category_id" :error="form.errors.sub_category_id"
-                                           class="pr-6 pb-8 w-full lg:w-3/3" :label="__('Sub Category')"
+                                           class=" w-full lg:w-3/3" :label="__('Sub Category')"
                                            :value="ticket.sub_category" :editable="user_access.ticket.update && !ticket.closed">
                         </select-edit-input> -->
 
                      
 
 
-                        <!-- <div class="assigned_user pr-6 pb-8 w-full lg:w-full flex flex-col">
+                        <!-- <div class="assigned_user  w-full lg:w-full flex flex-col">
                             <div class="w-25 flex gap-3">
                                 <label class="form-label" >{{ __('Request Details') }}</label>
                                 <icon v-if="!enableEditor && user_access.ticket.update && !ticket.closed" name="edit" @click="enableEditor=!enableEditor" class="w-4 h-4 mr-1 cursor-pointer" />
@@ -86,34 +87,34 @@
 
                         <!-- Super Admin Comment -->
                         <!-- <input ref="file" type="file" accept=".xlsx,.xls,image/*,.doc, .docx,.ppt, .pptx,.txt,.pdf, .zip" class="hidden" multiple="multiple" @change="fileInputChange" /> -->
-                        <div class="pr-6 pb-8 w-full lg:w-full flex-col">
+                        <div class=" w-full lg:w-full inline-block bg-gray-300 user-comment-round p-2 px-3 text-gray-70 ">
                             <!-- <button type="button" class="btn flex justify-center items-center pb-3 border-0 pl-0" @click="fileBrowse">
                                 <icon name="file" class="flex-shrink-0 h-5 fill-gray-400 pr-1" /> <strong>{{ __('Attach File') }}</strong>
                             </button> -->
-                            <div v-if="attachments.length" class="flex items-center justify-between pr-6 pt-8 w-full" v-for="(file, fi) in attachments" :key="fi">
+                            <div v-if="attachments.length" class="  w-full" v-for="(file, fi) in attachments" :key="fi">
                                 <div class="flex-1 pr-1">
-                                    {{ file.name }} <span class="text-gray-500 text-xs">({{ getFileSize(file.size) }})</span> <a v-if="file.user" class="text-sm" :href="this.route('users.edit', file.user.id)">{{ file.user.first_name }} {{ file.user.last_name }}</a> at <span class="text-sm">{{ file.created_at }}</span>
+                                    <span>{{ file.name }} </span>
                                 </div>
-                                <div class="a__buttons flex justify-end items-center ">
-                                    <!-- <button type="button" class="btn flex items-center " @click="downloadAttachment(file)">
-                                        {{ __('Download') }}</button> -->
-                                    <!-- <button type="button" class="btn flex items-center ml-3" @click="removeAttachment(file, fi)">
+                                <div class="a__buttons flex  items-center ">
+                                     <button type="button" class="btn flex items-center " @click="downloadAttachment(file)">
+                                        {{ __('Download') }}</button>
+                                     <!-- <button type="button" class="btn flex items-center ml-3" @click="removeAttachment(file, fi)">
                                         {{ __('Remove') }}</button> -->
                                         <button type="button" class="btn flex items-center ml-3" @click="viewAttachment(file)">
                                         {{ __('View') }}
                                     </button>
                                 </div>
                             </div>
-                            <div v-if="form.files.length" class="flex items-center justify-between pr-6 pt-8 w-full lg:w-1/2" v-for="(file, fi) in form.files" :key="fi">
+                            <div v-if="form.files.length" class="w-full lg:w-1/2" v-for="(file, fi) in form.files" :key="fi">
                                 <div class="flex-1 pr-1">
-                                    {{ file.name }} <span class="text-gray-500 text-xs">({{ getFileSize(file.size) }})</span>
+                                    {{ file.name }} 
                                 </div>
-                                <button v-if="ticket.status && !ticket.closed" type="button" class="btn flex justify-center items-center" @click="fileRemove(file, fi)">
+                                <button v-if="ticket.status && !ticket.closed" type="button" class="btn  items-center" @click="fileRemove(file, fi)">
                                     {{ __('Remove') }}</button>
                             </div>
                         </div>
 
-                        <div class="pr-6 pb-8 w-full lg:w-1/3 flex items-center" v-if="ticket.status && ticket.closed && ticket.review">
+                        <div class=" w-full lg:w-1/3 flex items-center" v-if="ticket.status && ticket.closed && ticket.review">
                             <strong>{{ __('Rating') }}: </strong> &nbsp; {{ ticket.review.rating }}
                             <p>
                                 {{ ticket.review.review }}
@@ -140,7 +141,7 @@
                             <div class="flex lg:w-1/4 mb-4"><button class="btn-indigo" type="submit">{{ __('Submit') }}</button></div>
                         </div>
                     </div>
-                    <div class="p-2  bg-gray-50 border-t border-gray-100 ">
+                    <div style="margin-top: 20px;"class=" pt-8   bg-gray-50 border-t border-gray-100 ">
                         <button v-if="user_access.ticket.delete" class="btn text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">
                             {{ __('Delete') }}</button>
                         </div>
@@ -210,46 +211,101 @@
                 </div>
             </div>
         </div>
-
-    </div>
-    
-         <!-- Modal for viewing files -->
-         <!-- <div v-if="showModal" class="flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div class="bg-white p-4 rounded shadow-lg max-w-full lg:w-3/5">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold">{{ selectedFile ? selectedFile.name : 'File Viewer' }}</h3>
-            <button @click="closeModal" class="text-2xl">&times;</button>
-        </div>
-        <div v-if="fileUrl" class="">
-            <iframe
+        <Teleport to="body">
+      <div v-if="showModal" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3 class="modal-title">{{ selectedFile ? selectedFile.name : 'File Viewer' }}</h3>
+            <button @click="closeModal" class="close-button">&times;</button>
+          </div>
+          
+          <div class="modal-content">
+            <div v-if="fileUrl" class="file-preview">
+              <iframe
                 v-if="selectedFile.name.toLowerCase().endsWith('.pdf')"
                 :src="fileUrl"
-                class="w-full h-full"
+                class="preview-frame"
                 frameborder="0">
-            </iframe>
-            <img
+              </iframe>
+              <img
                 v-else-if="['jpg', 'jpeg', 'png', 'gif'].includes(selectedFile.name.split('.').pop().toLowerCase())"
                 :src="fileUrl"
-                class="max-w-full max-h-full mx-auto"
+                class="preview-image"
                 :alt="selectedFile.name"
-            />
-            <iframe
+              />
+              <iframe
                 v-else
                 :src="fileUrl"
-                class="w-full h-full"
+                class="preview-frame"
                 frameborder="0">
-            </iframe>
-        </div>
-        <div v-else class="flex-grow flex items-center justify-center">
-            <p>This file type cannot be previewed.</p>
-        </div>
-        <div class="mt-4 flex justify-end">
-            <button @click="downloadAttachment(selectedFile)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Download
+              </iframe>
+            </div>
+            <div v-else class="no-preview">
+              <p>This file type cannot be previewed.</p>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button @click="downloadAttachment(selectedFile)" class="download-button">
+              Download
             </button>
+          </div>
         </div>
+      </div>
+    </Teleport>
+    <Teleport to="body">
+  <div v-if="chatModal && fileUrl" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ __('File Viewer') }}</h3>
+            <button @click="closeModal" class="close-button">&times;</button>
+          </div>
+      
+      <div class="modal-content">
+        <div class="file-preview">
+          <!-- PDF preview -->
+          <iframe
+            v-if="fileUrl.toLowerCase().endsWith('.pdf')"
+            :src="fileUrl"
+            class="preview-frame"
+            frameborder="0">
+          </iframe>
+          
+          <!-- Image preview (JPEG, PNG, GIF) -->
+          <img
+            v-else-if="['jpg', 'jpeg', 'png', 'gif'].includes(fileUrl.split('.').pop().toLowerCase())"
+            :src="fileUrl"
+            class="preview-image"
+            alt="Image preview"
+          />
+          
+          <!-- Other embeddable file types -->
+          <iframe
+            v-else
+            :src="fileUrl"
+            class="preview-frame"
+            frameborder="0">
+          </iframe>
+        </div>
+
+        <!-- Message for non-previewable file types -->
+        <div v-if="!fileUrl" class="no-preview">
+          <p>This file type cannot be previewed.</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button v-if="fileUrl" @click="downloadFileFromChat(fileUrl)" class="download-button">
+          Download
+        </button>
+      </div>
     </div>
-</div> -->
+  </div>
+</Teleport>
+
+    </div>
+        
+   
 </template>
 
 <script>
@@ -303,7 +359,9 @@ export default {
     remember: false,
     data() {
         return {
+            
             showModal: false,
+            chatModal: false,
         selectedFile: null,
         fileUrl: null,
             user: this.$page.props.auth.user,
@@ -351,7 +409,17 @@ export default {
         }
         this.moment = moment;
     },
+    mounted() {
+        const chatImg = document.querySelector(".chat-img");
+        if (chatImg) {
+            chatImg.addEventListener("click", this.openImagModal);
+        }
+    },
     methods: {
+        openImagModal(event) {
+            this.chatModal = true;
+            this.fileUrl = event.target.src;
+        },
         getCategories(){
             this.ticket.category = 'N/A';
             this.form.category_id = null;
@@ -396,6 +464,13 @@ export default {
             link.download = file.name;
             link.click();
         },
+        downloadFileFromChat(fileUrl) {
+        // Create an anchor element to download the file
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = fileUrl.split('/').pop(); // Set file name to the last part of fileUrl path
+        link.click();
+    },
         removeAttachment(file, index) {
             this.attachments.splice(index, 1);
             this.form.removedFiles.push(file.id)
@@ -445,6 +520,7 @@ export default {
 
 closeModal() {
     this.showModal = false;
+    this.chatModal = false;
     this.selectedFile = null;
     this.fileUrl = null;
 },
@@ -474,3 +550,100 @@ getFileUrl() {
     },
 }
 </script>
+
+<style scoped>
+img.chat-img{
+  width: 280px;
+  height: 280px;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 95%;
+  max-width: 60%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.close-button {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.file-preview {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-frame, .preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.no-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.download-button {
+  background-color: #3490dc;
+  color: white;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.download-button:hover {
+  background-color: #2779bd;
+}
+</style>
+

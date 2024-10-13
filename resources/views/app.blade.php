@@ -16,10 +16,28 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=smoothscroll,NodeList.prototype.forEach,Promise,Object.values,Object.assign,String.prototype.startsWith" defer></script>
 
     <script src="{{ mix('/js/app.js') }}" defer></script>
+    <script>
+    // Open the modal
+function openModal() {
+  var modal = document.getElementById("imageModal");
+  var modalImg = document.getElementById("modalImg");
+  var imgSrc = document.getElementById("modalImage").src;
+  
+  modal.style.display = "block";
+  modalImg.src = imgSrc;
+}
+
+    </script>
     @routes
     @inertiaHead
 </head>
 <body class="font-inter leading-none antialiased">
     @inertia
+
+    <!-- Modal Structure -->
+<div id="imageModal" class="modal">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <img class="modal-content" id="modalImg">
+</div>
 </body>
 </html>
