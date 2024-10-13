@@ -187,10 +187,10 @@ class WebhookController extends Controller
 
                 $ticket_open = Ticket::where('uid', $result)->first();
             } else {
-                if (empty($ticket_open) && $user->id != $assigned_to->id)
+                if (empty($ticket_open) && $customer->id != $assigned_to->id)
                     $ticket_open = Ticket::whereDate('open', Carbon::now()) // Check if 'open' matches the current time
                         ->whereNull('close')
-                        ->where('user_id', $user->id)       // Check if 'cloase' is null
+                        ->where('user_id', $customer->id)       // Check if 'cloase' is null
                         ->first();
             }
 
@@ -198,7 +198,7 @@ class WebhookController extends Controller
                 Comment::create([
                     'details' => $details,
                     'ticket_id' => $ticket_open->id,
-                    'user_id' => $user->id
+                    'user_id' => $customer->id
                 ]);
             } else {
                 $request_data = [
