@@ -56,13 +56,61 @@ class WebhookController extends Controller
     //         return response()->json(['message' => 'Webhook received'], 200);
     //     }
     // }
+    
+private function saveAudioFromBase64($base64Content, $messageId)
+{
+    // Decode the base64-encoded content
+    $audioContent = base64_decode($base64Content);
+    
+    // Define the file path within the public directory
+    $directoryPath = public_path('files/audios');
+    
+    // Ensure the directory exists
+    if (!file_exists($directoryPath)) {
+        mkdir($directoryPath, 0755, true);
+    }
+    
+    // Define the full file path
+    $filePath = "{$directoryPath}/{$messageId}.ogg";
 
+    // Save the decoded content to a file
+    file_put_contents($filePath, $audioContent);
+    \Log::info("Audio saved to: {$filePath}");
+}
+
+private function generateAudioHtml($messageId)
+{
+    // Generate the URL for accessing the file in the public directory
+    $audioPath = asset("files/audios/{$messageId}.ogg");
+    
+    // Return HTML code with an audio player
+    return "<audio controls>
+                <source src='{$audioPath}' type='audio/ogg'>
+                Your browser does not support the audio element.
+            </audio>";
+}
     public function handleWebhook(Request $request)
     {
         $webhookData = $request->all();
                  // Log the received webhook data
           \Log::info('Received Webhook:', $webhookData);
-        $details = '';
+          $details = '';
+           // Check if it's an audio message
+   // Check if it's an audio message
+   if (isset($webhookData['body']['message']['audioMessage'])) {
+    $msgContent = $webhookData['body']['msgContent'];
+    $messageId = $webhookData['body']['key']['id'];
+
+    // Decode and save the audio file
+    $this->saveAudioFromBase64($msgContent, $messageId);
+
+    // Generate HTML for the audio player
+    $audioHtml = $this->generateAudioHtml($messageId);
+    \Log::info("Generated Audio HTML: {$audioHtml}");
+    $details .=$audioHtml ;
+   
+}
+        
         // Check if the type is 'message'
         if (isset($webhookData['type']) && $webhookData['type'] === 'message') {
             // Extract the message details
