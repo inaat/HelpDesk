@@ -60,6 +60,8 @@ class WebhookController extends Controller
     public function handleWebhook(Request $request)
     {
         $webhookData = $request->all();
+                 // Log the received webhook data
+          \Log::info('Received Webhook:', $webhookData);
         $details = '';
         // Check if the type is 'message'
         if (isset($webhookData['type']) && $webhookData['type'] === 'message') {
