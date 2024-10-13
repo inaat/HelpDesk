@@ -1610,9 +1610,6 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 .z-40{
   z-index: 40;
 }
-.z-50{
-  z-index: 50;
-}
 .z-\[-1\]{
   z-index: -1;
 }
@@ -1627,6 +1624,9 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 }
 .m-auto{
   margin: auto;
+}
+.m-2{
+  margin: 0.5rem;
 }
 .-mx-4{
   margin-left: -1rem;
@@ -1881,8 +1881,8 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 .h-full{
   height: 100%;
 }
-.max-h-full{
-  max-height: 100%;
+.max-h-72{
+  max-height: 18rem;
 }
 .min-h-screen{
   min-height: 100vh;
@@ -2400,10 +2400,6 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
   --tw-bg-opacity: 1;
   background-color: rgb(96 165 250 / var(--tw-bg-opacity));
 }
-.bg-blue-500{
-  --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
-}
 .bg-blue-600{
   --tw-bg-opacity: 1;
   background-color: rgb(37 99 235 / var(--tw-bg-opacity));
@@ -2491,9 +2487,6 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
 }
 .bg-opacity-5{
   --tw-bg-opacity: 0.05;
-}
-.bg-opacity-50{
-  --tw-bg-opacity: 0.5;
 }
 .bg-gradient-to-b{
   background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
@@ -3078,10 +3071,6 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
   --tw-border-opacity: 1;
   border-color: rgb(86 97 179 / var(--tw-border-opacity));
 }
-.hover\:bg-blue-700:hover{
-  --tw-bg-opacity: 1;
-  background-color: rgb(29 78 216 / var(--tw-bg-opacity));
-}
 .hover\:bg-dark:hover{
   --tw-bg-opacity: 1;
   background-color: rgb(60 72 88 / var(--tw-bg-opacity));
@@ -3639,9 +3628,6 @@ body .dark.layout_landing .form-input,body .dark.layout_landing
   }
   .lg\:w-full{
     width: 100%;
-  }
-  .lg\:w-1{
-    width: 0.25rem;
   }
   .lg\:max-w-full{
     max-width: 100%;
@@ -6211,8 +6197,4 @@ body .dark .sec_chat .sidebar .chat-left-aside .c-top .about .name {
 .scheme-rose .after\:bg-indigo-600:after{
   --tw-bg-opacity: 1 !important;
   background-color: rgb(225 29 72 / var(--tw-bg-opacity)) !important;
-}
-img.chat-img{
-  width: 280px;
-  height: 280px;
 }

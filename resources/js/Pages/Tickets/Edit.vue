@@ -2,9 +2,9 @@
     <div>
         <Head :title="__(title)" /> 
         <div class="flex flex-wrap">
-            <div class=" lg:w-1/5" style="width:200px;">
-                <form @submit.prevent="update" class="bg-white rounded-md shadow overflow-hidden mr-2">
-                    <div class="p-2 -mr-6 -mb-8 flex flex-wrap">
+            <div class="lg:w-1/5 w-48 bg-white rounded-md shadow  m-2 overflow-y-auto " style="width:200px; " >
+                <form @submit.prevent="update" class="">
+                    <div class=" flex flex-wrap p-2">
                         <!--Super Admin -->
                         <select-edit-input v-if="auth.user.role.slug !== 'customer'" placeholder="Search customer" :onInput="doFilter" :items="customers"
                                              v-model="form.user_id" :error="form.errors.user_id"
