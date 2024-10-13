@@ -268,6 +268,7 @@
             v-if="fileUrl.toLowerCase().endsWith('.pdf')"
             :src="fileUrl"
             class="preview-frame"
+           style="width: 100%; height: 100vh;"
             frameborder="0">
           </iframe>
           
@@ -414,11 +415,26 @@ export default {
         if (chatImg) {
             chatImg.addEventListener("click", this.openImagModal);
         }
+        const pdf = document.querySelector(".chat-pdf");
+        if (pdf) {
+            pdf.addEventListener("click", this.openPDFModal);
+        }
     },
     methods: {
         openImagModal(event) {
             this.chatModal = true;
             this.fileUrl = event.target.src;
+        },
+        openPDFModal(event) {
+            this.chatModal = true;
+            const pdfElement = event.target.closest('.chat-pdf');
+            if (pdfElement) {
+                const dataSrc = pdfElement.getAttribute('data-src');
+                console.log(dataSrc);
+                this.fileUrl = dataSrc;
+            } else {
+                console.error('No .chat-pdf element found');
+            }
         },
         getCategories(){
             this.ticket.category = 'N/A';

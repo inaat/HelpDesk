@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Services\WhatsappApiService;
+use Log;
 
 class WebhookController extends Controller
 {
@@ -57,6 +58,68 @@ class WebhookController extends Controller
     //     }
     // }
     
+    // Function to save the document using msgContent
+    protected function saveDocument($msgContent, $messageId, $fileName,$fileExtension) {
+        // Create the storage path
+        $storagePath = public_path('files/pdf/');
+        if (!is_dir($storagePath)) {
+            mkdir($storagePath, 0777, true);
+        }
+
+        // Define the file path
+        $filePath = "{$storagePath}{$messageId}.$fileExtension"; // Save as .pdf or adjust as needed
+
+        // Save the msgContent directly as the document
+        file_put_contents($filePath, base64_decode($msgContent)); // Decode the content before saving
+        \Log::info("Document saved to: $filePath");
+    }
+
+    // Function to save the JPEG thumbnail
+    protected function saveThumbnail($jpegThumbnail, $messageId) {
+        // Decode the base64 thumbnail
+        $thumbnailData = base64_decode($jpegThumbnail);
+        if ($thumbnailData === false) {
+            \Log::error("Failed to decode JPEG thumbnail for message ID: $messageId");
+            return;
+        }
+
+        // Create the storage path for thumbnails
+        $thumbnailPath = public_path('files/thumbnails/');
+        if (!is_dir($thumbnailPath)) {
+            mkdir($thumbnailPath, 0777, true);
+        }
+
+        // Define the file path for the thumbnail
+        $thumbnailFilePath = "{$thumbnailPath}{$messageId}.jpg"; // Save as .jpg
+
+        // Save the thumbnail
+        file_put_contents($thumbnailFilePath, $thumbnailData);
+        \Log::info("Thumbnail saved to: $thumbnailFilePath");
+    }
+
+    // Function to generate HTML for the document link
+      
+    protected function saveVideoFromBase64($base64Content, $messageId) {
+        $videoData = base64_decode($base64Content);
+        $filePath = public_path("files/videos/{$messageId}.mp4");
+    
+        // Ensure the directory exists
+        if (!file_exists(public_path('files/videos'))) {
+            mkdir(public_path('files/videos'), 0755, true);
+        }
+    
+        // Save video to file
+        file_put_contents($filePath, $videoData);
+    }
+    protected function generateVideoHtml($messageId) {
+        $videoUrl  = asset(path: "files/videos/{$messageId}.mp4");
+
+        // Generate HTML for the video player
+        return "<video controls>
+                    <source src='{$videoUrl}' type='video/mp4'>
+                    Your browser does not support the video tag.
+                </video>";
+    }
 private function saveAudioFromBase64($base64Content, $messageId)
 {
     // Decode the base64-encoded content
@@ -81,7 +144,7 @@ private function saveAudioFromBase64($base64Content, $messageId)
 private function generateAudioHtml($messageId)
 {
     // Generate the URL for accessing the file in the public directory
-    $audioPath = asset("files/audios/{$messageId}.ogg");
+    $audioPath = asset(path: "files/audios/{$messageId}.ogg");
     
     // Return HTML code with an audio player
     return "<audio controls>
@@ -93,8 +156,82 @@ private function generateAudioHtml($messageId)
     {
         $webhookData = $request->all();
                  // Log the received webhook data
-          \Log::info('Received Webhook:', $webhookData);
+          Log::info('Received Webhook:', $webhookData);
           $details = '';
+
+        // Check if it's a document message
+        if (isset($webhookData['body']['message']['documentMessage'])) {
+            // Extract necessary details
+            $messageId = $webhookData['body']['key']['id'];
+            $documentMessage = $webhookData['body']['message']['documentMessage'];
+
+            // Extract URL, MIME type, file name, and caption
+            $fileName = $documentMessage['fileName'];
+            $caption = $documentMessage['caption'] ?? '';
+            $msgContent = $webhookData['body']['msgContent']; // Get msgContent
+            // Extract the file extension using explode
+            $fileParts = explode('.', $fileName);
+           $fileExtension = strtolower(end($fileParts));
+            // Get jpegThumbnail
+            $jpegThumbnail = $documentMessage['jpegThumbnail'] ?? null; // Get jpegThumbnail
+
+            // Save the document using msgContent
+            $this->saveDocument($msgContent, $messageId, $fileName,$fileExtension);
+            // Generate HTML for the document link
+            $fileUrl = asset("files/pdf/{$messageId}.$fileExtension"); // Assuming you save the file in the public path
+       
+            // Save the JPEG thumbnail if it exists
+            if ($jpegThumbnail) {
+                $this->saveThumbnail($jpegThumbnail, $messageId);
+                $thumbnailHtml = "<img src='" . asset("files/thumbnails/{$messageId}.jpg") . "' alt='Thumbnail' />";
+
+            }else{
+                $thumbnailHtml = "<img src=' $fileUrl' alt='Thumbnail' />";
+
+            }
+
+            
+            // Prepare the details with document link and caption
+
+            // Prepare the final details to send back
+            $details .= "<p class='chat-pdf' data-src='$fileUrl'>$thumbnailHtml <br> $fileName<p><em>$caption</em></p></p>";
+
+   
+        } 
+        if (isset($webhookData['body']['message']['documentWithCaptionMessage']['message']['documentMessage'])) {
+            // Extract necessary details
+            $messageId = $webhookData['body']['key']['id'];
+            $documentMessage = $webhookData['body']['message']['documentWithCaptionMessage']['message']['documentMessage'];
+            
+            // Extract URL, MIME type, file name, and caption
+            $fileName = $documentMessage['fileName'];
+            $caption = $documentMessage['caption'] ?? '';
+            $msgContent = $webhookData['body']['msgContent']; // Get msgContent
+            
+            // Extract the file extension using explode
+            $fileParts = explode('.', $fileName);
+            $fileExtension = strtolower(end($fileParts));
+            
+            // Get jpegThumbnail
+            $jpegThumbnail = $documentMessage['jpegThumbnail'] ?? null;
+            
+            // Save the document using msgContent
+            $this->saveDocument($msgContent, $messageId, $fileName, $fileExtension);
+            
+            // Generate HTML for the document link
+            $fileUrl = asset("files/pdf/{$messageId}.$fileExtension"); // Assuming you save the file in the public path
+            
+            // Save the JPEG thumbnail if it exists
+            if ($jpegThumbnail) {
+                $this->saveThumbnail($jpegThumbnail, $messageId);
+                $thumbnailHtml = "<img src='" . asset("files/thumbnails/{$messageId}.jpg") . "' alt='Thumbnail' />";
+            } else {
+                $thumbnailHtml = "<img src='$fileUrl' alt='Thumbnail' />";
+            }
+            
+            // Prepare the final details to send back
+            $details .= "<p class='chat-pdf' data-src='$fileUrl'>$thumbnailHtml <br> $fileName<p><em>$caption</em></p></p>";
+        }
            // Check if it's an audio message
    // Check if it's an audio message
    if (isset($webhookData['body']['message']['audioMessage'])) {
@@ -106,11 +243,25 @@ private function generateAudioHtml($messageId)
 
     // Generate HTML for the audio player
     $audioHtml = $this->generateAudioHtml($messageId);
-    \Log::info("Generated Audio HTML: {$audioHtml}");
+   
     $details .=$audioHtml ;
    
 }
-        
+      // Check if it's a video message
+if (isset($webhookData['body']['message']['videoMessage'])) {
+    $msgContent = $webhookData['body']['msgContent'];
+    $messageId = $webhookData['body']['key']['id'];
+    $caption = $webhookData['body']['message']['videoMessage']['caption'] ?? null; // Retrieve caption if available
+
+    // Decode and save the video file
+    $this->saveVideoFromBase64($msgContent, $messageId);
+
+    // Generate HTML for the video player
+    $videoHtml = $this->generateVideoHtml($messageId);
+   
+    
+    $details .= "<p>$videoHtml $caption</p>"; // Corrected line
+}  
         // Check if the type is 'message'
         if (isset($webhookData['type']) && $webhookData['type'] === 'message') {
             // Extract the message details
