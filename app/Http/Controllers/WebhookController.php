@@ -134,12 +134,12 @@ class WebhookController extends Controller
             }
             $assigned_to = null;
             $assigned_phone = null;
-          
+
             $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
             // Check if the mobile number exists in the phone array
             if (in_array($mobile_no, $phone_array)) {
                 $assigned_to = User::where('phone', $mobile_no)->first();
-                
+
             }
 
             $ticket_open = null;
@@ -154,30 +154,30 @@ class WebhookController extends Controller
                     $customer = $user ? $user : null;
                 }
             }
-            if(empty($customer)){
-                   // Handle empty fields gracefully
-            $user = User::where('phone', $mobile_no)->first();
-            if (empty($user)) {
-                $userRequest = [
-                    'first_name' => $mobile_no,
-                    'last_name' => 'whatsapp',
-                    'phone' => $mobile_no,
-                    'email' => $mobile_no . '@gmail.com'
-                ];
+            if (empty($customer)) {
+                // Handle empty fields gracefully
+                $user = User::where('phone', $mobile_no)->first();
+                if (empty($user)) {
+                    $userRequest = [
+                        'first_name' => $mobile_no,
+                        'last_name' => 'whatsapp',
+                        'phone' => $mobile_no,
+                        'email' => $mobile_no . '@gmail.com'
+                    ];
 
-                // Fetch the customer role
-                $customerRole = Role::where('slug', 'customer')->first();
-                if (!empty($customerRole)) {
-                    $userRequest['role_id'] = $customerRole->id;
+                    // Fetch the customer role
+                    $customerRole = Role::where('slug', 'customer')->first();
+                    if (!empty($customerRole)) {
+                        $userRequest['role_id'] = $customerRole->id;
+                    }
+
+                    // Create a new user and assign it to the $user variable
+                    $user = User::create($userRequest);
+                    $customer = $user;
                 }
-
-                // Create a new user and assign it to the $user variable
-                $user = User::create($userRequest);
-                $customer=$user;
-            }
-            $customer=$user;
-            }else{
-                $assigned_phone =$mobile_no;
+                $customer = $user;
+            } else {
+                $assigned_phone = $mobile_no;
             }
             // Check if a match was found and output it
             if (!empty($matches)) {
@@ -204,8 +204,8 @@ class WebhookController extends Controller
             } else {
                 $request_data = [
                     //'user_id' => $user->id,
-                    'user_id' => $customer ? $customer->id :null,
-                    'department_id' =>$assigned_to ? $assigned_to->department_id : null,
+                    'user_id' => $customer ? $customer->id : null,
+                    'department_id' => $assigned_to ? $assigned_to->department_id : null,
                     'status_id' => 2,
                     'priority_id' => 3,
                     'type_id' => 5,
@@ -224,12 +224,12 @@ class WebhookController extends Controller
                     $customer->phone,
                     "Your  ticket #$ticket->uid"
                 );
-                if(!empty($assigned_phone)){
-                $response = $this->whatsappApiService->sendTestMsg(
-                    '888',
-                    $assigned_phone,
-                    "Your  ticket #$ticket->uid"
-                );
+                if (!empty($assigned_phone)) {
+                    $response = $this->whatsappApiService->sendTestMsg(
+                        '888',
+                        $assigned_phone,
+                        "Your  ticket #$ticket->uid"
+                    );
                 }
             }
             // Log additional information if needed
