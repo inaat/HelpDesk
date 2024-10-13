@@ -141,8 +141,8 @@
                             <div class="flex lg:w-1/4 mb-4"><button class="btn-indigo" type="submit">{{ __('Submit') }}</button></div>
                         </div>
                     </div>
-                    <div style="margin-top: 20px;"class=" pt-8   bg-gray-50 border-t border-gray-100 ">
-                        <button v-if="user_access.ticket.delete" class="btn text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">
+                    <div style="margin-top: 5px;"class=" pt-8   bg-gray-50 border-t border-gray-100 ">
+                        <button v-if="user_access.ticket.delete" class=" p-2 btn text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">
                             {{ __('Delete') }}</button>
                         </div>
                         <div class="p-2 bg-gray-50 border-t border-gray-100 ">
