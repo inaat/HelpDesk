@@ -702,10 +702,11 @@ private function generateRandomEmail()
         $update_message = null;
         if ($closed_status && ($ticket->status_id != $closed_status->id) && $request_data['status_id'] == $closed_status->id) {
             $update_message = 'The ticket has been closed.';
+            $ticket->update(['close' => now()]);
         } elseif ($ticket->status_id != $request_data['status_id']) {
             $update_message = 'The status has been changed for this ticket.';
         }
-
+        
         if ($ticket->priority_id != $request_data['priority_id']) {
             $update_message = 'The priority has been changed for this ticket.';
         }
@@ -726,7 +727,16 @@ private function generateRandomEmail()
             event(new AssignedUser(['ticket_id' => $ticket->id]));
         }
 
-        if (!empty($update_message)) {
+        if (!empty($update_message) && !empty($ticket->user)) {
+            $phone = $ticket->user->phone;
+            $email = $ticket->user->email;
+
+            if (!empty($phone)) {
+            $response = $this->whatsappApiService->sendTestMsg(
+                '888',
+                $phone,
+                str_replace('&nbsp;', "\n\n", $update_message)
+            );}
             event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
         }
 
