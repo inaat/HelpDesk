@@ -711,14 +711,15 @@ private function generateRandomEmail()
 
         $update_message = null;
         if ($closed_status && ($ticket->status_id != $closed_status->id) && $request_data['status_id'] == $closed_status->id) {
-            $update_message = 'The ticket has been closed.';
+            $update_message = "The ticket has been closed.Ticket Number #$ticket->uid";
             $ticket->update(['close' => now()]);
         } elseif ($ticket->status_id != $request_data['status_id']) {
-            $update_message = 'The status has been changed for this ticket.';
+            $update_message = "The status has been changed for this ticket. Ticket Number #$ticket->uid";
+
         }
         
         if ($ticket->priority_id != $request_data['priority_id']) {
-            $update_message = 'The priority has been changed for this ticket.';
+            $update_message = "The priority has been changed for this ticket. Ticket Number #$ticket->uid";
         }
 
         if (empty($ticket->response) && $user['role']['slug'] === 'admin') {
