@@ -14,8 +14,11 @@
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
 
     <script src="https://polyfill.io/v3/polyfill.min.js?features=smoothscroll,NodeList.prototype.forEach,Promise,Object.values,Object.assign,String.prototype.startsWith" defer></script>
-
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="{{ mix('/js/app.js') }}" defer></script>
+
     <script>
     // Open the modal
 function openModal() {

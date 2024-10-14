@@ -21,6 +21,7 @@ use App\Models\Status;
 use App\Models\Ticket;
 use App\Models\Type;
 use App\Models\User;
+use Carbon\Carbon;
 use DB;
 use DOMDocument;
 use Illuminate\Database\Eloquent\Model;
@@ -308,14 +309,23 @@ private function generateRandomEmail()
 
         // Check for date filtering
         if ($startDate && $endDate) {
+            $startDate = Carbon::createFromFormat('d-m-Y H:i:s', $startDate. '00:00:00')->format('Y-m-d H:i:s');
+            
+            $endDate = Carbon::createFromFormat('d-m-Y H:i:s', $endDate . '23:59:59')->format('Y-m-d H:i:s');
+
             $ticketQuery = $ticketQuery->whereBetween('created_at', [
-                $startDate . ' 00:00:00',
-                $endDate . ' 23:59:59'
+                $startDate ,
+                $endDate 
             ]);
         } elseif ($startDate) {
-            $ticketQuery = $ticketQuery->where('created_at', '>=', $startDate . ' 00:00:00');
+
+      
+            $startDate = Carbon::createFromFormat('d-m-Y H:i:s', $startDate.' 00:00:00')->format('Y-m-d');
+            $ticketQuery = $ticketQuery->whereDate('created_at',  $startDate );
         } elseif ($endDate) {
-            $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate . ' 23:59:59');
+            $endDate = Carbon::createFromFormat('d-m-Y H:i:s',$endDate . ' 23:59:59')->format('Y-m-d H:i:s');
+
+            $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate );
         }
 
         return Inertia::render('Tickets/Index', [

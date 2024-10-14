@@ -60,12 +60,26 @@
                 v-model="form.assigned_to" class=" w-full">
             </select-input-filter>
             <!-- Date Filter: Start Date -->
-            <input type="date" v-model="form.startDate" class="mr-2 w-full border border-gray-300 p-2 rounded"
-                placeholder="DD MM YYYY" />
+         
+                <input 
+                type="text" 
+                id="start-datePicker" 
+                :value="startDateForDisplay"
+                @change="updateStartDate"
+                class="mr-2 w-full border border-gray-300 p-2 rounded"
+                placeholder="DD/MM/YYYY"
+            /><span class="datepicker_label" style="pointer-events: none;"></span>
 
-            <!-- Date Filter: End Date -->
-            <input type="date" v-model="form.endDate" class="mr-2 w-full border border-gray-300 p-2 rounded"
-                placeholder="DD MM YYYY" />
+                <input 
+                type="text" 
+                id="end-datePicker" 
+                :value="endDateForDisplay"
+                @change="updateEndDate"
+                class="mr-2 w-full border border-gray-300 p-2 rounded"
+                placeholder="DD/MM/YYYY"
+            /><span class="datepicker_label" style="pointer-events: none;"></span>
+
+
         </div>
         <div class="bg-white rounded-md shadow overflow-x-auto">
             <table class="min-w-full whitespace-nowrap ticket_list">
@@ -171,6 +185,8 @@ import SelectInput from '@/Shared/SelectInput'
 import SearchInput from '@/Shared/SearchInput'
 import SelectInputFilter from '@/Shared/SelectInputFilter'
 import axios from 'axios'
+import moment from 'moment'
+import 'jquery-ui/ui/widgets/datepicker'; // Import jQuery UI Datepicker
 
 export default {
     metaInfo: { title: 'Tickets' },
@@ -235,7 +251,43 @@ export default {
             }, 150),
         },
     },
+    computed: {
+        startDateForDisplay() {
+            return this.form.startDate || ''; // For the input display
+        },
+        endDateForDisplay() {
+            return this.form.endDate|| ''; // For the input display
+        },
+    },
+    mounted() {
+        // Initialize the datepicker
+        $('#start-datePicker').datepicker({
+            dateFormat: 'dd-mm-yy', // Date format: DD/MM/YYYY
+            onSelect: (dateText) => {
+                this.form.startDate =   dateText;
+            }
+        });
+        $('#end-datePicker').datepicker({
+            dateFormat: 'dd-mm-yy', // Date format: DD/MM/YYYY
+            onSelect: (dateText) => {
+                this.form.endDate = dateText;
+            }
+        });
+    },
     methods: {
+        updateStartDate(event) {
+    const inputDate = event.target.value;
+        this.form.startDate = inputDate;
+    
+},
+
+updateEndDate(event) {
+    const inputDate = event.target.value;
+        this.form.endDate = inputDate // Ensure this updates endDate
+     
+},
+
+    
         doFilter(e) {
             axios.get(this.route('filter.assignees', { search: e.target.value })).then((res) => {
                 this.assignees.splice(0, this.assignees.length, ...res.data);
