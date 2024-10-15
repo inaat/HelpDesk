@@ -159,7 +159,7 @@ class WebhookController extends Controller
         if (in_array($mobile_no, $phone_array)) {
             $assigned_to = User::where('phone', $mobile_no)->first();
         }
-        $lastTicket = Ticket::where('assigned_to', $assigned_to->id)->where('review_id', 1)->first();
+        $lastTicket = Ticket::where('assigned_to', $assigned_to->id?? null)->where('review_id', 1)->first();
         preg_match('/#(\d+)/', $details, $checkForwardMatches);
         if (!empty($checkForwardMatches)) {
             $details=  str_replace('#'.$checkForwardMatches[1], '', $details);
