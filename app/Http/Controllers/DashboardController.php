@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use App\Models\Contact;
 use App\Models\Country;
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Status;
 use App\Models\Ticket;
@@ -31,12 +32,6 @@ class DashboardController extends Controller {
         $avgWhere = [];
         $opened_status = Status::where('slug', 'like', '%closed%')->first();
         $newTicketQuery = Ticket::select(DB::raw('*'));
-        if(!empty($opened_status)){
-            $avgWhere[] = ['status_id', '!=', $opened_status->id];
-            $openedTickets = Ticket::byUser($byUser)->byAssign($byAssign)->where('status_id', '!=', $opened_status->id)->count();
-        }
-
-
         if(in_array($user['role']['slug'], ['customer'])){
             $byUser = $user['id'];
             $avgWhere[] = ['user_id', '=', $byUser];
@@ -45,10 +40,24 @@ class DashboardController extends Controller {
             $byAssign = $user['id'];
             $avgWhere[] = ['assigned_to', '=', $byAssign];
             $newTicketQuery->where('assigned_to', '=', $byAssign);
+        
+        }elseif(in_array($user['role']['slug'], ['agent'])){
+            $byAssign = $user['id'];
+            $avgWhere[] = ['assigned_to', '=', $byAssign];
+            $newTicketQuery->where('assigned_to', '=', $byAssign);
+        }
+        if(!empty($opened_status)){
+            $avgWhere[] = ['status_id', '!=', $opened_status->id];
+          //  dd($byAssign);
+            $openedTickets = Ticket::byUser($byUser)->byAssign($byAssign)->where('status_id', '!=', $opened_status->id)->count();
         }
 
 
+  
+        
+        
         $top_clients = Ticket::selectRaw("user_id, count(id) as total")
+            ->byAssign($byAssign)
             ->groupBy('user_id')
             ->orderBy('total','DESC')
             ->limit('3')
@@ -60,12 +69,14 @@ class DashboardController extends Controller {
             $top_creators[] = ['name' => $client->user? $client->user->first_name.' '.$client->user->last_name : '', 'count' => $client->total];
         }
         $top_creators = $this->generateColorCount($top_creators, $top_creator_tickets);
-
+         
         // Ticket By Departments
         $top_tickets_by_department = Ticket::selectRaw("department_id, count(id) as total")
+            ->byAssign($byAssign)
             ->groupBy('department_id')
             ->orderBy('total','DESC')
             ->get();
+            ;
         $top_departments = [];
         $count_tickets_by_department = 0;
         foreach ($top_tickets_by_department as $tt){
@@ -77,6 +88,7 @@ class DashboardController extends Controller {
 
         // Ticket By Types
         $top_tickets_by_type = Ticket::selectRaw("type_id, count(id) as total")
+        ->byAssign($byAssign)
             ->groupBy('type_id')
             ->orderBy('total','DESC')
             ->get();
@@ -115,8 +127,8 @@ class DashboardController extends Controller {
 
         $startThisMonth = Carbon::now()->startOfMonth()->toDateString();
 
-        $lastMonthTotal = Ticket::whereBetween('created_at',[$fromDate,$tillDate])->count();
-        $thisMonthTotal = Ticket::whereBetween('created_at', [$startThisMonth, now()])->count();
+        $lastMonthTotal = Ticket::whereBetween('created_at',[$fromDate,$tillDate])->byAssign($byAssign)->count();
+        $thisMonthTotal = Ticket::whereBetween('created_at', [$startThisMonth, now()])->byAssign($byAssign)->count();
 
         $beforeMonths = Carbon::now()->startOfMonth()->subMonths(12);
 
@@ -128,6 +140,7 @@ class DashboardController extends Controller {
 
 //        $thisMountTickets = Ticket::whereBetween('created_at', [$startThisMonth, now()])
         $previousMountTickets = Ticket::whereBetween('created_at', [$beforeMonths, now()])
+          ->byAssign($byAssign)
             ->orderBy('created_at')
             ->get()
             ->groupBy(function ($val) {
@@ -149,10 +162,10 @@ class DashboardController extends Controller {
 
         $customer_role = Role::where('slug', 'customer')->first();
         if(!empty($customer_role)){
-            $totalCustomers = User::where('role_id', $customer_role->id)->count();
+            $totalCustomers = Organization::count();
         }
 
-        $totalContacts = Contact::count();
+        $totalContacts = User::where('role_id', $customer_role->id)->count();
 
         return Inertia::render('Dashboard/Index', [
             'title' => 'Dashboard',
@@ -193,18 +206,29 @@ class DashboardController extends Controller {
 
     private function generateColorCount($items, $maxCount){
         $colors = ['#c25ef1','#7562ca','#2980b9','#c0392b','#43c0dc','#7366ff','#800081','#2c3e50','#f39c12','#16a085','#27ae60'];
-        foreach ($items as $itemKey => &$itemValue){
-            $itemValue['value'] = ($itemValue['count'] * 100)/$maxCount;
-            $itemValue['label'] = $itemValue['name'].' '.round($itemValue['value'], 2).'% ('.$itemValue['count'].')';
-            if($itemKey >= count($colors)){
-                $itemValue['color'] = $colors[$itemKey % count($colors)];
-            }else{
-                $itemValue['color'] = $colors[$itemKey];
+        
+        // Check if $maxCount is zero to avoid division by zero
+        if ($maxCount == 0) {
+            foreach ($items as &$itemValue) {
+                $itemValue['value'] = 0;
+                $itemValue['label'] = $itemValue['name'] . ' 0% (0)';
+                $itemValue['color'] = $colors[array_search($itemValue, $items) % count($colors)];
+            }
+        } else {
+            foreach ($items as $itemKey => &$itemValue) {
+                $itemValue['value'] = ($itemValue['count'] * 100) / $maxCount;
+                $itemValue['label'] = $itemValue['name'] . ' ' . round($itemValue['value'], 2) . '% (' . $itemValue['count'] . ')';
+                if ($itemKey >= count($colors)) {
+                    $itemValue['color'] = $colors[$itemKey % count($colors)];
+                } else {
+                    $itemValue['color'] = $colors[$itemKey];
+                }
             }
         }
+    
         return $items;
     }
-
+    
     public function editProfile() {
         $user_id = Auth()->id();
         $user = User::where('id', $user_id)->first();
