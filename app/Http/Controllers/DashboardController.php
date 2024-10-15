@@ -21,6 +21,12 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller {
     public function index() {
+     
+       
+       
+
+
+
         $user = Auth()->user();
         if(empty($user['role'])){
             $customerRole = $this->getCustomerRole();

@@ -65,7 +65,7 @@ class HelpDesk{
 public function getUniqueUid()
 {
     // Get the current date in the required format
-    $datePrefix = now()->format('mdy'); // YYMMDD 'ymd'
+    $datePrefix = now()->format('dmy'); // YYMMDD 'ymd'
 
     // Get the last ticket UID created today
     $lastTicket = Ticket::where('uid', 'like', $datePrefix . '%')
@@ -88,6 +88,14 @@ public function getUniqueUid()
     $uid = $datePrefix . $formattedSerial;
 
     return $uid;
+}
+public function getDatePrefix()
+{
+    // Get the current date in the required format
+    $datePrefix = now()->format('dmy'); // YYMMDD 'ymd'
+
+
+    return $datePrefix;
 }
 function sendHtmlEmail($to, $subject, $message) {
     $smtp_server = '';  // SMTP server

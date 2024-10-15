@@ -56,7 +56,7 @@
               </div>
           </div>
       </div>
-      <div class="response__details mt-8 flex gap-5 flex-col lg:flex-row" v-if="auth.user.role.slug !== 'customer'">
+      <div class="response__details mt-8 flex gap-5 flex-col lg:flex-row" v-if="auth.user.role.slug !== 'customer' && auth.user.role.slug !== 'agent'">
           <div class="w-full">
               <div class="r__wrapper flex flex-col pl-5 pr-5 pb-5 bg-white items-center rounded-lg shadow-lg rd">
                   <h2 class="th__ttl font-bold text-lg pt-3">{{ __('Ticket by department') }}</h2>

@@ -224,6 +224,7 @@
               <iframe
                 v-if="selectedFile.name.toLowerCase().endsWith('.pdf')"
                 :src="fileUrl"
+                style="width: 100%; height: 100vh;"
                 class="preview-frame"
                 frameborder="0">
               </iframe>
@@ -284,6 +285,7 @@
           <iframe
             v-else
             :src="fileUrl"
+            style="width: 100%; height: 100vh;"
             class="preview-frame"
             frameborder="0">
           </iframe>
@@ -412,8 +414,12 @@ export default {
     },
     mounted() {
         const chatImg = document.querySelector(".chat-img");
+        const chatImg2 = document.querySelector("figure.image > img");
         if (chatImg) {
             chatImg.addEventListener("click", this.openImagModal);
+        }
+        if (chatImg2) {
+            chatImg2.addEventListener("click", this.openImagModal);
         }
         const pdf = document.querySelector(".chat-pdf");
         if (pdf) {

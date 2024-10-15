@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class WhatsappApiService
 {
+   // private $baseUrl = 'http://localhost:3333';
     private $baseUrl = 'http://sender.injazatsoftware.net';
 
     private $token = 'YOUR_TOKEN'; 

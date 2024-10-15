@@ -14,51 +14,270 @@ use Log;
 
 class WebhookController extends Controller
 {
-
     private $whatsappApiService;
 
     public function __construct(WhatsappApiService $whatsappApiService)
     {
-        // Apply middleware to the controller
-
-        // Inject the WhatsappApiService dependency
         $this->whatsappApiService = $whatsappApiService;
     }
-    //     public function handleWebhook(Request $request)
-    //     {
-    //         $webhookData = $request->all();
 
-    //         // Log the received webhook data
-    //         \Log::info('Received Webhook:', $webhookData);
+    public function handleWebhook(Request $request)
+    {
+        $webhookData = $request->all();
+        Log::info('Received Webhook:', $webhookData);
+        $details = '';
 
-    //         // Check if the type is 'message'
-    //         if (isset($webhookData['type']) && $webhookData['type'] === 'message') {
-    //             // Extract the message details
-    //             $messageData = $webhookData['body']['message'] ?? null;
-    //             $msgContent = $messageData['extendedTextMessage']['text'] ?? null; // Accessing the text from extendedTextMessage
-    //             $messageId = $webhookData['body']['key']['id'] ?? null; // Extracting the message ID if needed
-    //             $sender = $webhookData['body']['pushName'] ?? null; // Extracting the sender's name
+        // Handle messages
+        if (isset($webhookData['body']['message'])) {
+            $this->handleMessages($webhookData, $details);
+        } else {
+            Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
+        }
 
-    //             // Log the message content if available
-    //             if ($msgContent) {
-    //                 \Log::info('Message Content:', [$msgContent]);
-    //             } else {
-    //                 \Log::info('No message content available.');
-    //             }
+        return response()->json(['message' => 'Webhook received'], 200);
+    }
 
-    //             // Log additional information if needed
-    //             \Log::info('Sender:', [$sender]);
-    //             \Log::info('Message ID:', [$messageId]);
-    //         } else {
-    //             \Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
-    //         }
+    private function handleMessages($webhookData, &$details)
+    {
+        $messageId = $webhookData['body']['key']['id'] ?? null;
+        $messageData = $webhookData['body']['message'];
 
-    //         // Send a response back to acknowledge the webhook was received
-    //         return response()->json(['message' => 'Webhook received'], 200);
-    //     }
-    // }
-    
-    // Function to save the document using msgContent
+        // Handle document messages
+        if (isset($messageData['documentMessage']) || isset($messageData['documentWithCaptionMessage']['message']['documentMessage'])) {
+            $documentMessage = isset($messageData['documentMessage'])
+                ? $messageData['documentMessage']
+                : $messageData['documentWithCaptionMessage']['message']['documentMessage'];
+            $this->processDocument($documentMessage, $webhookData, $messageId, $details);
+        }
+
+        // Handle audio messages
+        if (isset($messageData['audioMessage'])) {
+            $this->processAudio($webhookData, $messageId, $details);
+        }
+
+        // Handle video messages
+        if (isset($messageData['videoMessage'])) {
+            $this->processVideo($webhookData, $messageId, $details);
+        }
+
+        // Handle text and image messages
+        $this->processTextAndImage($webhookData, $messageData, $details);
+    }
+
+    private function processDocument($documentMessage, $webhookData, $messageId, &$details)
+    {
+        $fileName = $documentMessage['fileName'];
+        $caption = $documentMessage['caption'] ?? '';
+        $msgContent = $webhookData['body']['msgContent'];
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $jpegThumbnail = $documentMessage['jpegThumbnail'] ?? null;
+
+        // Save the document and thumbnail
+        $this->saveDocument($msgContent, $messageId, $fileName, $fileExtension);
+        $fileUrl = asset("files/pdf/{$messageId}.$fileExtension");
+
+        $thumbnailHtml = $jpegThumbnail
+            ? "<img src='" . asset("files/thumbnails/{$messageId}.jpg") . "' alt='Thumbnail' />"
+            : "<img src='$fileUrl' alt='Thumbnail' />";
+
+        $details .= "<p class='chat-pdf' data-src='$fileUrl'>$thumbnailHtml <br> $fileName<p><em>$caption</em></p></p>";
+
+        // Save the thumbnail if it exists
+        if ($jpegThumbnail) {
+            $this->saveThumbnail($jpegThumbnail, $messageId);
+        }
+    }
+
+    private function processAudio($webhookData, $messageId, &$details)
+    {
+        $msgContent = $webhookData['body']['msgContent'];
+        $this->saveAudioFromBase64($msgContent, $messageId);
+        $details .= $this->generateAudioHtml($messageId);
+    }
+
+    private function processVideo($webhookData, $messageId, &$details)
+    {
+        $msgContent = $webhookData['body']['msgContent'];
+        $caption = $webhookData['body']['message']['videoMessage']['caption'] ?? null;
+
+        $this->saveVideoFromBase64($msgContent, $messageId);
+        $videoHtml = $this->generateVideoHtml($messageId);
+        $details .= "<p>$videoHtml $caption</p>";
+    }
+
+    private function processTextAndImage($webhookData, $messageData, &$details)
+    {
+        $remoteJid = $webhookData['body']['key']['remoteJid'] ?? null;
+        $mobile_no = null;
+
+        // Handle text messages
+        $msgText = $messageData['conversation'] ?? ($messageData['extendedTextMessage']['text'] ?? null);
+        if ($msgText) {
+            $details .= "<p>$msgText</p>";
+        }
+
+        // Handle image messages
+        if (isset($messageData['imageMessage'])) {
+            $this->processImage($messageData['imageMessage'], $webhookData, $details);
+        }
+
+        // Handle mobile number extraction
+        if ($remoteJid) {
+            $mobile_no = explode('@', $remoteJid)[0];
+            Log::info('remoteJid:', [$remoteJid]);
+        }
+
+        // Handle user and ticket creation logic
+        $this->handleUserAndTicket($mobile_no, $details);
+    }
+
+    private function processImage($imageMessage, $webhookData, &$details)
+    {
+        $caption = $imageMessage['caption'] ?? null;
+        $msgContent = $webhookData['body']['msgContent'];
+        $imageData = base64_decode($msgContent);
+        $fileName = 'image_' . time() . '_' . uniqid() . '.jpg';
+        $filePath = public_path('files/kb/' . $fileName);
+
+        if (!file_exists(public_path('images'))) {
+            mkdir(public_path('images'), 0755, true);
+        }
+
+        file_put_contents($filePath, $imageData);
+        $customUrl = url("/files/kb/{$fileName}");
+        $details .= "<p>{$caption}<img class='chat-img' src=\"/files/kb/{$fileName}\"></p><a href=\"{$customUrl}\">open</a>";
+        Log::info('Image saved to:', [$filePath]);
+    }
+
+    private function handleUserAndTicket($mobile_no, $details)
+    {
+        $assigned_to = null;
+        $assigned_phone = null;
+        // Fetch phone numbers of users with role_id = 5
+        $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
+        // Check if the mobile number exists in the phone array
+        if (in_array($mobile_no, $phone_array)) {
+            $assigned_to = User::where('phone', $mobile_no)->first();
+        }
+        $lastTicket = Ticket::where('assigned_to', $assigned_to->id)->where('review_id', 1)->first();
+        preg_match('/#(\d+)/', $details, $checkForwardMatches);
+        if (!empty($checkForwardMatches)) {
+            $details=  str_replace('#'.$checkForwardMatches[1], '', $details);
+            $ticketUid = app('App\HelpDesk')->getDatePrefix() . $checkForwardMatches[1];
+            // Get the last ticket UID created today
+            $lastTicket = Ticket::where('uid', $ticketUid)->first();
+            if (!empty($lastTicket)) {
+                $lastTicket->review_id = 1;
+                $lastTicket->save();
+            }
+        }
+        if (!empty($lastTicket)) {
+           
+            if (str_contains($details, '*')) {
+                if (!empty($lastTicket)) {
+                    $lastTicket->review_id = 0;
+                    $lastTicket->save();
+                }
+                return response()->json(['message' => 'Webhook received'], 200);
+            } else {
+                Comment::create([
+                    'details' => $details,
+                    'ticket_id' => $lastTicket->id,
+                    'user_id' => $assigned_to->id,
+                ]);
+            }
+            return response()->json(['message' => 'Webhook received'], 200);
+
+        }
+
+
+
+
+
+        $ticket_open = null;
+        $customer = null;
+
+        // Check for customer number in details
+        preg_match('/#C(\d+)/', $details, $matchesCustomer);
+        if (!empty($matchesCustomer)) {
+            $customer_no = str_replace('#C', '', $matchesCustomer[0]);
+            $organization = Organization::where('customer_no', $customer_no)->first();
+            if ($organization) {
+                $customer = User::where('organization_id', $organization->id)->first();
+            }
+            $details=  str_replace($matchesCustomer[0], '', $details);
+
+        }
+
+        // Handle user creation if customer is not found
+        if (empty($customer)) {
+            $user = User::where('phone', $mobile_no)->first();
+            if (!$user) {
+                $userRequest = [
+                    'first_name' => $mobile_no,
+                    'last_name' => 'whatsapp',
+                    'phone' => $mobile_no,
+                    'email' => $mobile_no . '@gmail.com',
+                    'role_id' => Role::where('slug', 'customer')->value('id'),
+                ];
+                $user = User::create($userRequest);
+            }
+            $customer = $user;
+        } else {
+            $assigned_phone = $mobile_no;
+        }
+
+        // Check for existing ticket using regex for ticket number
+        preg_match('/#(\d+)/', $details, $matches);
+        if (!empty($matches)) {
+            $ticket_open = Ticket::where('uid', str_replace('#', '', $matches[0]))->first();
+            $details=  str_replace($matches[0], '', $details);
+
+        }
+
+        // If no ticket found, check for an open ticket for the user
+        if (empty($ticket_open) && ($user->id ?? null) != ($assigned_to->id ?? null)) {
+            $ticket_open = Ticket::whereDate('open', Carbon::now())
+                ->whereNull('close')
+                ->where('user_id', $user->id)
+                ->first();
+        }
+
+        // If an open ticket exists, add a comment
+        if ($ticket_open) {
+            Comment::create([
+                'details' => $details,
+                'ticket_id' => $ticket_open->id,
+                'user_id' => $user->id,
+            ]);
+        } else {
+            // Create a new ticket
+            $request_data = [
+                'user_id' => $customer ? $customer->id : null,
+                'department_id' => $assigned_to ? $assigned_to->department_id : 2,
+                'status_id' => 2,
+                'priority_id' => 3,
+                'type_id' => 5,
+                'assigned_to' => $assigned_to ? $assigned_to->id : 1,
+                'subject' => "No Subject", // Default subject if empty
+                'details' => $details,
+            ];
+
+            // Create the ticket and generate a unique UID
+            $ticket = Ticket::create($request_data);
+            $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
+            $ticket->save();
+
+            // Send notification messages
+            $this->whatsappApiService->sendTestMsg('888', $customer->phone, "Your ticket #$ticket->uid");
+            if (!empty($assigned_phone)) {
+                $this->whatsappApiService->sendTestMsg('888', $assigned_phone, "Your ticket #$ticket->uid");
+            }
+        }
+        return response()->json(['message' => 'Webhook received'], 200);
+
+    }
+
     protected function saveDocument($msgContent, $messageId, $fileName,$fileExtension) {
         // Create the storage path
         $storagePath = public_path('files/pdf/');
@@ -152,298 +371,4 @@ private function generateAudioHtml($messageId)
                 Your browser does not support the audio element.
             </audio>";
 }
-    public function handleWebhook(Request $request)
-    {
-        $webhookData = $request->all();
-                 // Log the received webhook data
-          Log::info('Received Webhook:', $webhookData);
-          $details = '';
-
-        // Check if it's a document message
-        if (isset($webhookData['body']['message']['documentMessage'])) {
-            // Extract necessary details
-            $messageId = $webhookData['body']['key']['id'];
-            $documentMessage = $webhookData['body']['message']['documentMessage'];
-
-            // Extract URL, MIME type, file name, and caption
-            $fileName = $documentMessage['fileName'];
-            $caption = $documentMessage['caption'] ?? '';
-            $msgContent = $webhookData['body']['msgContent']; // Get msgContent
-            // Extract the file extension using explode
-            $fileParts = explode('.', $fileName);
-           $fileExtension = strtolower(end($fileParts));
-            // Get jpegThumbnail
-            $jpegThumbnail = $documentMessage['jpegThumbnail'] ?? null; // Get jpegThumbnail
-
-            // Save the document using msgContent
-            $this->saveDocument($msgContent, $messageId, $fileName,$fileExtension);
-            // Generate HTML for the document link
-            $fileUrl = asset("files/pdf/{$messageId}.$fileExtension"); // Assuming you save the file in the public path
-       
-            // Save the JPEG thumbnail if it exists
-            if ($jpegThumbnail) {
-                $this->saveThumbnail($jpegThumbnail, $messageId);
-                $thumbnailHtml = "<img src='" . asset("files/thumbnails/{$messageId}.jpg") . "' alt='Thumbnail' />";
-
-            }else{
-                $thumbnailHtml = "<img src=' $fileUrl' alt='Thumbnail' />";
-
-            }
-
-            
-            // Prepare the details with document link and caption
-
-            // Prepare the final details to send back
-            $details .= "<p class='chat-pdf' data-src='$fileUrl'>$thumbnailHtml <br> $fileName<p><em>$caption</em></p></p>";
-
-   
-        } 
-        if (isset($webhookData['body']['message']['documentWithCaptionMessage']['message']['documentMessage'])) {
-            // Extract necessary details
-            $messageId = $webhookData['body']['key']['id'];
-            $documentMessage = $webhookData['body']['message']['documentWithCaptionMessage']['message']['documentMessage'];
-            
-            // Extract URL, MIME type, file name, and caption
-            $fileName = $documentMessage['fileName'];
-            $caption = $documentMessage['caption'] ?? '';
-            $msgContent = $webhookData['body']['msgContent']; // Get msgContent
-            
-            // Extract the file extension using explode
-            $fileParts = explode('.', $fileName);
-            $fileExtension = strtolower(end($fileParts));
-            
-            // Get jpegThumbnail
-            $jpegThumbnail = $documentMessage['jpegThumbnail'] ?? null;
-            
-            // Save the document using msgContent
-            $this->saveDocument($msgContent, $messageId, $fileName, $fileExtension);
-            
-            // Generate HTML for the document link
-            $fileUrl = asset("files/pdf/{$messageId}.$fileExtension"); // Assuming you save the file in the public path
-            
-            // Save the JPEG thumbnail if it exists
-            if ($jpegThumbnail) {
-                $this->saveThumbnail($jpegThumbnail, $messageId);
-                $thumbnailHtml = "<img src='" . asset("files/thumbnails/{$messageId}.jpg") . "' alt='Thumbnail' />";
-            } else {
-                $thumbnailHtml = "<img src='$fileUrl' alt='Thumbnail' />";
-            }
-            
-            // Prepare the final details to send back
-            $details .= "<p class='chat-pdf' data-src='$fileUrl'>$thumbnailHtml <br> $fileName<p><em>$caption</em></p></p>";
-        }
-           // Check if it's an audio message
-   // Check if it's an audio message
-   if (isset($webhookData['body']['message']['audioMessage'])) {
-    $msgContent = $webhookData['body']['msgContent'];
-    $messageId = $webhookData['body']['key']['id'];
-
-    // Decode and save the audio file
-    $this->saveAudioFromBase64($msgContent, $messageId);
-
-    // Generate HTML for the audio player
-    $audioHtml = $this->generateAudioHtml($messageId);
-   
-    $details .=$audioHtml ;
-   
 }
-      // Check if it's a video message
-if (isset($webhookData['body']['message']['videoMessage'])) {
-    $msgContent = $webhookData['body']['msgContent'];
-    $messageId = $webhookData['body']['key']['id'];
-    $caption = $webhookData['body']['message']['videoMessage']['caption'] ?? null; // Retrieve caption if available
-
-    // Decode and save the video file
-    $this->saveVideoFromBase64($msgContent, $messageId);
-
-    // Generate HTML for the video player
-    $videoHtml = $this->generateVideoHtml($messageId);
-   
-    
-    $details .= "<p>$videoHtml $caption</p>"; // Corrected line
-}  
-        // Check if the type is 'message'
-        if (isset($webhookData['type']) && $webhookData['type'] === 'message') {
-            // Extract the message details
-            $messageData = $webhookData['body']['message'] ?? null;
-            $messageId = $webhookData['body']['key']['id'] ?? null; // Extracting the message ID if needed
-            $sender = $webhookData['body']['pushName'] ?? null; // Extracting the sender's name
-            $remoteJid = $webhookData['body']['key']['remoteJid'] ?? null; // Extracting the sender's name
-
-            // Initialize msgContent and caption
-            $msgContent = null;
-            $caption = null;
-            $mobile_no = null;
-            $msgText = $messageData['conversation']
-                ?? ($messageData['extendedTextMessage']['text'] ?? null);
-            // Log the message content if available
-            if ($msgText) {
-                $details .= "<p>$msgText</p>";
-                \Log::info('Message Content:', [$msgText]);
-            } else {
-                \Log::info('No message content available.');
-            }
-            if ($remoteJid) {
-                $whatsappId = $remoteJid;
-                $split = explode('@', $whatsappId);
-                $mobile_no = $split[0];
-                // The result will be an array
-                print_r($split);
-                \Log::info(' remoteJid :', [$remoteJid]);
-            } else {
-                \Log::info('No  remoteJid t available.');
-            }
-            // Handle image messages
-            if (isset($messageData['imageMessage'])) {
-                $imageMessage = $messageData['imageMessage'];
-                $caption = $imageMessage['caption'] ?? null; // Get the caption of the image
-
-                // Extract the Base64 content from the webhook data
-                $msgContent = $webhookData['body']['msgContent'] ?? null; // Accessing msgContent directly
-
-                // Log the image URL
-                $imageUrl = $imageMessage['url'] ?? null; // Get the URL of the image
-                if ($imageUrl) {
-                    \Log::info('Image URL:', [$imageUrl]);
-                } else {
-                    \Log::info('No image URL available.');
-                }
-
-                // Log the Base64 encoded message content
-                if ($msgContent) {
-                    // Decode the Base64 content
-                    $imageData = base64_decode($msgContent);
-
-                    // Generate a unique filename for the image
-                    $fileName = 'image_' . time() . '_' . uniqid() . '.jpg'; // You can modify the extension based on your needs
-                    $filePath = public_path('files/kb/' . $fileName); // Adjust the path where you want to save the image
-
-                    // Ensure the directory exists
-                    if (!file_exists(public_path('images'))) {
-                        mkdir(public_path('images'), 0755, true);
-                    }
-                    $customUrl = url("/files/kb/{$fileName}");
-
-                    // Save the image
-                    file_put_contents($filePath, $imageData);
-                    $details .= "<p>{$caption}<img class='chat-img' src=\"/files/kb/{$fileName}\"></p><a href=\"{$customUrl}\">open</a>";
-                    // Log the success of saving the image
-                    \Log::info('Image saved to:', [$filePath]);
-                } else {
-                    \Log::info('No Base64 message content available.');
-                }
-            }
-            $assigned_to = null;
-            $assigned_phone = null;
-
-            $phone_array = User::where('role_id', 5)->pluck('phone')->toArray();
-            // Check if the mobile number exists in the phone array
-            if (in_array($mobile_no, $phone_array)) {
-                $assigned_to = User::where('phone', $mobile_no)->first();
-
-            }
-
-            $ticket_open = null;
-            $customer = null;
-            preg_match('/#(\d+)/', $details, $matches);
-            preg_match('/#C(\d+)/', $details, $matchesCustomer);
-            if (!empty($matchesCustomer)) {
-                $customer_no = str_replace('#C', '', $matchesCustomer[0]);
-                $og = Organization::Where('customer_no', $customer_no)->first();
-                if (!empty($og)) {
-                    $user = User::where('organization_id', $og->id)->first();
-                    $customer = $user ? $user : null;
-                }
-            }
-            if (empty($customer)) {
-                // Handle empty fields gracefully
-                $user = User::where('phone', $mobile_no)->first();
-                if (empty($user)) {
-                    $userRequest = [
-                        'first_name' => $mobile_no,
-                        'last_name' => 'whatsapp',
-                        'phone' => $mobile_no,
-                        'email' => $mobile_no . '@gmail.com'
-                    ];
-
-                    // Fetch the customer role
-                    $customerRole = Role::where('slug', 'customer')->first();
-                    if (!empty($customerRole)) {
-                        $userRequest['role_id'] = $customerRole->id;
-                    }
-
-                    // Create a new user and assign it to the $user variable
-                    $user = User::create($userRequest);
-                    $customer = $user;
-                }
-                $customer = $user;
-            } else {
-                $assigned_phone = $mobile_no;
-            }
-            // Check if a match was found and output it
-            if (!empty($matches)) {
-                $result = str_replace('#', '', $matches[0]);
-
-
-                \Log::info("The number after # is:$assigned_to " . $result . $details);
-
-                $ticket_open = Ticket::where('uid', $result)->first();
-            } else {
-                if (empty($ticket_open) &&  ($user->id ?? null) != ($assigned_to->id ?? null))
-                    $ticket_open = Ticket::whereDate('open', Carbon::now()) // Check if 'open' matches the current time
-                        ->whereNull('close')
-                        ->where('user_id', $user->id)       // Check if 'cloase' is null
-                        ->first();
-                    
-
-            }
-
-            if (!empty($ticket_open)) {
-                Comment::create([
-                    'details' => $details,
-                    'ticket_id' => $ticket_open->id,
-                    'user_id' => $user->id
-                ]);
-            } else {
-                $request_data = [
-                    //'user_id' => $user->id,
-                    'user_id' => $customer ? $customer->id : null,
-                    'department_id' => $assigned_to ? $assigned_to->department_id : 2,
-                    'status_id' => 2,
-                    'priority_id' => 3,
-                    'type_id' => 5,
-                    'assigned_to' => $assigned_to ? $assigned_to->id :1,
-                    'subject' => $caption ?: $msgText ?: "No Subject",
-                    // Default subject if empty
-                    'details' => $details,
-                ];
-
-                // Create a new ticket
-                $ticket = Ticket::create($request_data);
-                $ticket->uid = app(abstract: 'App\HelpDesk')->getUniqueUid($ticket->id);
-                $ticket->save();
-                $response = $this->whatsappApiService->sendTestMsg(
-                    '888',
-                    $customer->phone,
-                    "Your  ticket #$ticket->uid"
-                );
-                if (!empty($assigned_phone)) {
-                    $response = $this->whatsappApiService->sendTestMsg(
-                        '888',
-                        $assigned_phone,
-                        "Your  ticket #$ticket->uid"
-                    );
-                }
-            }
-            // Log additional information if needed
-
-        } else {
-            \Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
-        }
-
-        // Send a response back to acknowledge the webhook was received
-        return response()->json(['message' => 'Webhook received'], 200);
-    }
-}
-
-

@@ -25,7 +25,7 @@
                         <option v-for="s in types" :key="s.id" :value="s.id">{{ s.name }}</option>
                     </select-input>
 
-                    <select-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" v-model="form.department_id" :error="form.errors.department_id" class="pr-6 pb-5 md:col-span-6 lg:w-1/3" :label="__('Department')">
+                    <select-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" v-model="form.department_id" :error="form.errors.department_id" :disabled class="pr-6 pb-5 md:col-span-6 lg:w-1/3" :label="__('Department')">
                         <option :value="null">{{ __('Select a department') }}</option>
                         <option v-for="department in departments" :key="department.id" :value="department.id">{{ department.name }}</option>
                     </select-input>
