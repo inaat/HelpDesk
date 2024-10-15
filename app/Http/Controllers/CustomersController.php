@@ -96,6 +96,12 @@ class CustomersController extends Controller {
 
     public function edit(User $user)
     {
+        
+        $access =auth()->user()->access;
+        
+        if (!($access['customer']['update'] )) {
+            return Redirect::back()->with('error', 'Unauthorized action..');
+        }
         $can_delete = 0;
         $logged_user = Auth()->user();
         if($logged_user['role']['slug'] === 'admin'){
@@ -144,7 +150,11 @@ class CustomersController extends Controller {
         if (config('app.demo')) {
             return Redirect::back()->with('error', 'Updating customer is not allowed for the live demo.');
         }
-
+        $access =auth()->user()->access;
+        
+        if (!($access['customer']['update'] )) {
+            return Redirect::back()->with('error', 'Unauthorized action..');
+        }
         Request::validate([
             'first_name' => ['required', 'max:50'],
             'last_name' => ['nullable'],

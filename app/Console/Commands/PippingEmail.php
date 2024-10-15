@@ -132,7 +132,7 @@ class PippingEmail extends Command {
             'department_id' =>$assigned_to ? $assigned_to->department_id : 2,
             'status_id' => 2,
             'priority_id'=>3,
-            'type_id'=>5,
+            'type_id'=>6,
         ]);
 
         $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);

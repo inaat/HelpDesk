@@ -257,7 +257,7 @@ class WebhookController extends Controller
                 'department_id' => $assigned_to ? $assigned_to->department_id : 2,
                 'status_id' => 2,
                 'priority_id' => 3,
-                'type_id' => 5,
+                'type_id' => 4,
                 'assigned_to' => $assigned_to ? $assigned_to->id : 1,
                 'subject' => "No Subject", // Default subject if empty
                 'details' => $details,

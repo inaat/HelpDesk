@@ -17,7 +17,7 @@
                             <div class="font-light text-sm">{{ formatDateTime(ticket.created_at) }}</div>
                         </div>
                     <select-edit-input 
-                    v-if="auth.user.role.slug !== 'customer' && !(hidden_fields && hidden_fields.includes('assigned_to'))" 
+                    v-if="auth.user.role.slug !== 'customer' &&  !(hidden_fields && hidden_fields.includes('assigned_to'))" 
                     placeholder="Search user" 
                     :onInput="doFilterUsersExceptCustomer" 
                     :items="usersExceptCustomers"
@@ -28,7 +28,7 @@
                     :value="ticket.assigned_user ?? 'Not Assigned'" 
                     :editable="(auth.user.role.slug === 'admin' || auth.user.role.slug === 'manager') && user_access.ticket.update && !ticket.closed">
                     </select-edit-input>
-                    <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
+                    <select-edit-input v-if="auth.user.role.slug !== 'agent' && !(hidden_fields && hidden_fields.includes('department'))" @change="getCategories()" placeholder="Search department" :items="departments"
                                            v-model="form.department_id" :error="form.errors.department_id"
                                            class=" w-full lg:w-3/3" :label="__('Department')"
                                            :value="ticket.department" :editable="user_access.ticket.update && !ticket.closed">
@@ -47,13 +47,24 @@
                                            :value="ticket.status?ticket.status.name:'N/A'" :editable="auth.user.role.slug !== 'customer' && user_access.ticket.update && !ticket.closed">
                         </select-edit-input>
 
-                        <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" placeholder="Search type" :items="types"
+                        <!-- <select-edit-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))"  placeholder="Search type"  :items="types"
                                            v-model="form.type_id" :error="form.errors.type_id"
                                            class=" w-full lg:w-3/3" :label="__('Ticket type')"
                                            :value="ticket.type" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                        </select-edit-input> -->
 
-                     
+                        <select-edit-input 
+    v-if="!(hidden_fields && hidden_fields.includes('ticket_type')) && form.type_id !== 4 && form.type_id !== 6" 
+    :disabled="form.type_id === 4 || form.type_id === 6" 
+    placeholder="Search type" 
+    :items="types"
+    v-model="form.type_id" 
+    :error="form.errors.type_id"
+    class="w-full lg:w-3/3" 
+    :label="__('Ticket type')"
+    :value="ticket.type" 
+    :editable="user_access.ticket.update && !ticket.closed">
+</select-edit-input>
 
                         <!-- <select-edit-input ref="category" v-if="!(hidden_fields && hidden_fields.includes('category')) && form.department_id" @change="getSubCategories()" placeholder="Search category" :items="categories"
                                            v-model="form.category_id" :error="form.errors.category_id"

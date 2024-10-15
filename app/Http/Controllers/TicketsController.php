@@ -467,15 +467,29 @@ private function generateRandomEmail()
         $user = Auth()->user();
         $roles = Role::pluck('id', 'slug')->all();
         $hiddenFields = Setting::where('slug', 'hide_ticket_fields')->first();
+        
+        // Conditionally query types based on the authenticated user's role
+        $typesQuery = Type::orderBy('name');
+        
+        if ($user->role->slug === 'agent') {
+            $typesQuery->whereNotIn('id', [4, 5, 6]);
+        }
+        
+        $types = $typesQuery->get()->map->only('id', 'name');
+        
         return Inertia::render('Tickets/Create', [
             'title' => 'Create a new ticket',
             'hidden_fields' => $hiddenFields && $hiddenFields->value ? json_decode($hiddenFields->value) : null,
-            'customers' => User::where('role_id', $roles['customer'] ?? 0)->orWhere('id', Request::input('customer_id'))->orderBy('first_name')
+            'customers' => User::where('role_id', $roles['customer'] ?? 0)
+                ->orWhere('id', Request::input('customer_id'))
+                ->orderBy('first_name')
                 ->limit(6)
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)->orWhere('id', Request::input('user_id'))->orderBy('first_name')
+            'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)
+                ->orWhere('id', Request::input('user_id'))
+                ->orderBy('first_name')
                 ->limit(6)
                 ->get()
                 ->map
@@ -488,19 +502,15 @@ private function generateRandomEmail()
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'all_categories' => Category::orderBy('name')
-                ->get(),
+            'all_categories' => Category::orderBy('name')->get(),
             'statuses' => Status::orderBy('name')
                 ->get()
                 ->map
                 ->only('id', 'name'),
-            'types' => Type::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'types' => $types,
         ]);
     }
-
+    
     public function store(Request $request)
     {
         $required_fields = [];
