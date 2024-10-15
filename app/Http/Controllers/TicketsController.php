@@ -926,7 +926,7 @@ private function generateRandomEmail()
                 ];
 
 
-                dd(\Mail::to($email)->send(new \App\Mail\NewCommentMail($data)));
+                ///dd(\Mail::to($email)->send(new \App\Mail\NewCommentMail($data)));
             }
         }
 
