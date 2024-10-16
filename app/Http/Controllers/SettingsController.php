@@ -186,14 +186,9 @@ class SettingsController extends Controller {
        
         try {
             $data['email_settings'] = $mailVariables;
-            
-            // Send a test email
-            \Notification::route('mail', 'test-h5k1rv7m2@srv1.mail-tester.com')
-                ->notify(new \App\Notifications\TestEmailNotification($data));
-            \Notification::route('mail', 'inayatullahkks@gmail.com')
-                ->notify(new \App\Notifications\TestEmailNotification($data));
-                \Notification::route('mail', 'inayat@injazat-software.com')
-                ->notify(new \App\Notifications\TestEmailNotification($data));
+            app(abstract: 'App\HelpDesk')->sendEmail( 'inayatullahkks@gmail.com',  'Ticket#', 'hello');
+
+           
             return [
                 'success' => 1,
                 'msg' => __('lang_v1.email_tested_successfully')
