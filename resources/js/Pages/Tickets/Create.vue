@@ -33,7 +33,7 @@
                     </select-input> -->
                     <div class="pr-6 pb-8 w-full lg:w-1/3"><label class="form-label"
                             for="select-input-b0330f95-1535-4b81-bc08-e79cb06f9121">{{ __('Department') }}  </label>
-                        <select :disabled="true" v-model="form.department_id" class="form-select"
+                        <select  :disabled="auth.user.role.slug === 'agent'"  v-model="form.department_id" class="form-select"
                             :class="{ error: form.errors.department_id }">
                             <option :value="null">{{ __('Select a department') }}</option>
                             <option v-for="department in departments" :key="department.id" :value="department.id">
@@ -224,7 +224,7 @@ export default {
             this.$refs.file.click()
         },
         store() {
-            this.form.user_id = this.auth.user.id;
+            
             this.form.post(this.route('tickets.store'))
         },
     },

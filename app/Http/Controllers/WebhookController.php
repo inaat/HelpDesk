@@ -261,6 +261,7 @@ class WebhookController extends Controller
                 'assigned_to' => $assigned_to ? $assigned_to->id : 1,
                 'subject' => "No Subject", // Default subject if empty
                 'details' => $details,
+                'contact_id'=> $assigned_to ? $assigned_to->id : null,
             ];
 
             // Create the ticket and generate a unique UID

@@ -480,13 +480,29 @@ private function generateRandomEmail()
         return Inertia::render('Tickets/Create', [
             'title' => 'Create a new ticket',
             'hidden_fields' => $hiddenFields && $hiddenFields->value ? json_decode($hiddenFields->value) : null,
-            'customers' => User::where('role_id', $roles['customer'] ?? 0)
-                ->orWhere('id', Request::input('customer_id'))
-                ->orderBy('first_name')
-                ->limit(6)
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            // 'customers' => User::where('role_id', $roles['customer'] ?? 0)
+            //     ->orWhere('id', Request::input('customer_id'))
+            //     ->orderBy('first_name')
+            //     ->limit(6)
+            //     ->get()
+            //     ->map
+            //     ->only('id', 'name'),
+            'customers' => User::with('organization') // Eager load the organization relationship
+            ->where('role_id', $roles['customer'] ?? 0)
+            ->orWhere('id', Request::input('customer_id'))
+            //->orderBy('first_name')
+            ->limit(6)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+              // Concatenate organization customer number, organization name, user name, and phone number
+            'name' => ($user->organization 
+            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+            : '') . 
+            $user->name . ' ' . $user->phone,
+                ];
+            }),
             'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)
                 ->orWhere('id', Request::input('user_id'))
                 ->orderBy('first_name')
@@ -521,7 +537,7 @@ private function generateRandomEmail()
         }
         $user = Auth()->user();
         $request_data = Request::validate([
-            'user_id' => ['nullable', Rule::exists('users', 'id')],
+            'user_id' => ['required', Rule::exists('users', 'id')],
             'priority_id' => ['nullable', Rule::exists('priorities', 'id')],
             'status_id' => ['nullable', Rule::exists('status', 'id')],
             'department_id' => [in_array('department', $required_fields) ? 'required' : 'nullable', Rule::exists('departments', 'id')],
@@ -531,12 +547,14 @@ private function generateRandomEmail()
             'type_id' => [in_array('ticket_type', $required_fields) ? 'required' : 'nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'details' => ['required'],
+            
         ]);
 
         if (in_array($user['role']['slug'], ['customer'])) {
             $request_data['user_id'] = $user['id'];
         }
-
+        $request_data['contact_id'] = $user->id;
+       
         if (is_null($request_data['priority_id'])) {
             $priority = Priority::orderBy('name')->first();
             if (!empty($priority)) {
@@ -605,7 +623,16 @@ private function generateRandomEmail()
         }
 
         $roles = Role::pluck('id', 'slug')->all();
-
+  // Conditionally query types based on the authenticated user's role
+  $statusQuery = Status::orderBy('name');
+        
+  if ($user->role->slug === 'agent') {
+     if($user->id!=$ticket->contact_id){
+      $statusQuery->whereNotIn('id', [4]);
+     }
+  }
+  
+  $status = $statusQuery->get()->map->only('id', 'name');
         return Inertia::render('Tickets/Edit', [
             'hidden_fields' => $hiddenFields ? json_decode($hiddenFields->value) : null,
             'title' => '#' . $ticket->uid . '/' . $ticket->subject ?? '',
@@ -640,10 +667,7 @@ private function generateRandomEmail()
                 ->only('id', 'name'),
             'all_categories' => Category::orderBy('name')
                 ->get(),
-            'statuses' => Status::orderBy('name')
-                ->get()
-                ->map
-                ->only('id', 'name'),
+            'statuses' =>  $status,
             'attachments' => Attachment::orderBy('name')->with('user')->where('ticket_id', $ticket->id ?? null)->get(),
             'comments' => Comment::orderBy('created_at', 'asc')->with('user')->where('ticket_id', $ticket->id ?? null)->get(),
             'types' => Type::orderBy('name')
@@ -747,7 +771,21 @@ private function generateRandomEmail()
         if ($assigned) {
             event(new AssignedUser(['ticket_id' => $ticket->id]));
         }
-
+        if($request_data['status_id']===1 && $user->id != $ticket->contact->id){
+            $originator_inform = "Dear {$ticket->contact->name}, Ticket #{$ticket->uid} has been marked as 'completed' by {$ticket->assignedTo->name}. Please review the work, and close the ticket if everything meets your expectations.";
+            if (!empty($ticket->contact->phone)) {
+            $response = $this->whatsappApiService->sendTestMsg(
+                '888',
+                $ticket->contact->phone,
+                str_replace('&nbsp;', "\n\n",  $originator_inform)
+                
+            );
+            if(!empty( $ticket->contact->email)){
+                event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $originator_inform]));
+                }                                                                                                     
+        }
+           
+        }
         if (!empty($update_message) && !empty($ticket->user)) {
             $phone = $ticket->user->phone;
             $email = $ticket->user->email;
@@ -758,7 +796,9 @@ private function generateRandomEmail()
                 $phone,
                 str_replace('&nbsp;', "\n\n", $update_message)
             );}
+            if(!empty( $email)){
             event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
+            }
         }
 
         if (!empty(Request::input('comment'))) {
