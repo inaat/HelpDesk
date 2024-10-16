@@ -50,11 +50,9 @@ class UserCreatedNotification
                     }
                 }
                 $messageData = ['html' => $template, 'subject' => 'HelpDesk - Your account has been created.'];
-                if(config('queue.enable')){
-                    Mail::to($user->email)->queue(new SendMailFromHtml($messageData));
-                }else{
-                    Mail::to($user->email)->send(new SendMailFromHtml($messageData));
-                }
+                app(abstract: 'App\HelpDesk')->sendEmail( $user->email,  'HelpDesk - Your account has been created.', $template);
+
+                
             }
         }
     }

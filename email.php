@@ -1,10 +1,10 @@
 <?php
-$smtp_server = '';  // SMTP server
-$smtp_port = '';                            // SMTP port
-$username = '';  // SMTP username
-$password = '';                    // SMTP password
+$smtp_server = 'mail.injazat-software.com';  // SMTP server
+$smtp_port = '587';                            // SMTP port
+$username = 'support@injazat-software.com';  // SMTP username
+$password = '123zxcasd@@';                    // SMTP password
 
-$to = 'inayatullahkks@gmail.com';
+$to = 'test-fk1qzbuth@srv1.mail-tester.com';
 $subject = 'Test HTML Email Subject';
 $message = '<html><body>';
 $message .= '<h1>This is a test email</h1>';

@@ -44,11 +44,9 @@ class SendMailNotification
                 $template = str_replace($m[0][$i], sprintf($variables[$m[1][$i]], $varname), $template);
             }
         }
-        $messageData = ['html' => $template, 'subject' => $data['subject']];
-        if(config('queue.enable')){
-            Mail::to($variables['to'])->queue(new SendMailFromHtml($messageData));
-        }else{
-            Mail::to($variables['to'])->send(new SendMailFromHtml($messageData));
-        }
+        
+        app(abstract: 'App\HelpDesk')->sendEmail($variables['to'], $data['subject'], $template);
+
+       
     }
 }

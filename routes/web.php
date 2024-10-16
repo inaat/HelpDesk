@@ -39,8 +39,10 @@ use App\Http\Controllers\FrontPagesController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SubscriptionController;
+use App\Mail\TestEmail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InstallController;
+use PHPMailer\PHPMailer\PHPMailer;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,7 +56,39 @@ use App\Http\Controllers\InstallController;
 */
 
 // Auth
+Route::get('/send-email', function () {
+    $mail = new PHPMailer(true); // Create a new PHPMailer instance
+    $message=view('mail.test')->render();
+    $subject='SMTP Test Email';
+    dd(app('App\HelpDesk')->sendEmail('inayatullahkks@gmail.com', $subject, $message));
+    try {
+           
+        $mail->isSMTP();
+       // dd(config('mail.mailers.smtp.host'));
+       //$mail->Host       = config('mail.mailers.smtp.host');
+        $mail->Host       = config('mail.mailers.smtp.host');        // Specify main and backup SMTP servers
+        $mail->SMTPAuth   = true;
+        $mail->Username   = config('mail.mailers.smtp.username');
+        $mail->Password   = config('mail.mailers.smtp.password');
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = config('mail.mailers.smtp.port');
 
+        // Set the sender and recipient
+        $mail->setFrom(config('mail.mailers.smtp.username'), 'Support');
+        $mail->addAddress('inayatullahkks@gmail.com');
+        // Content
+        $mail->isHTML(true);                              // Set email format to HTML
+        $mail->Subject = 'SMTP Test Email';
+        $mail->Body    = view('mail.test')->render();
+        $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+
+        // Send the email
+        $mail->send();
+        return 'Message has been sent';
+    } catch (Exception $e) {
+        return "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+    }
+})->name('send.email');
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
     ->name('login')
     ->middleware('guest');

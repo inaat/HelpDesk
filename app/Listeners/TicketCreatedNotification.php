@@ -75,10 +75,8 @@ class TicketCreatedNotification
             }
         }
         $messageData = ['html' => $template, 'subject' => '[Ticket#'.$ticket->uid.'] - '.$ticket->subject];
-        if(config('queue.enable')){
-            Mail::to($user->email)->queue(new SendMailFromHtml($messageData));
-        }else{
-            Mail::to($user->email)->send(new SendMailFromHtml($messageData));
-        }
+        app(abstract: 'App\HelpDesk')->sendEmail( $user->email,  '[Ticket#'.$ticket->uid.'] - '.$ticket->subject, $template);
+
+        
     }
 }

@@ -55,11 +55,8 @@ class SendForgotPasswordNotification
                     }
                 }
                 $messageData = ['html' => $template, 'subject' => $variables['subject']];
-                if(config('queue.enable')){
-                    Mail::to($variables['to'])->queue(new SendMailFromHtml($messageData));
-                }else{
-                    Mail::to($variables['to'])->send(new SendMailFromHtml($messageData));
-                }
+                app(abstract: 'App\HelpDesk')->sendEmail($variables['to'],  $variables['subject'], $template);
+
             }
         }
     }

@@ -54,11 +54,8 @@ class SendAssignedUserNotification
                     }
                 }
                 $messageData = ['html' => $template, 'subject' => '[Ticket#'.$ticket->uid.'] - You got assigned'];
-                if(config('queue.enable')){
-                    Mail::to($ticket->assignedTo->email)->queue(new SendMailFromHtml($messageData));
-                }else{
-                    Mail::to($ticket->assignedTo->email)->send(new SendMailFromHtml($messageData));
-                }
+                app(abstract: 'App\HelpDesk')->sendEmail($ticket->assignedTo->email, '[Ticket#'.$ticket->uid.'] - You got assigned', $template);
+
             }
         }
     }

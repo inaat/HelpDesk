@@ -63,10 +63,7 @@ class SendTicketNewCommentNotification
             }
         }
         $messageData = ['html' => $template, 'subject' => '[Ticket#'.$ticket->uid.'] - A new comment'];
-        if(config('queue.enable')){
-            Mail::to($email)->queue(new SendMailFromHtml($messageData));
-        }else{
-            Mail::to($email)->send(new SendMailFromHtml($messageData));
-        }
+        app(abstract: 'App\HelpDesk')->sendEmail( $email, '[Ticket#'.$ticket->uid.'] - A new comment', $template);
+
     }
 }

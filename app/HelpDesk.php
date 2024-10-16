@@ -4,6 +4,8 @@ namespace App;
 
 use App\Models\Setting;
 use App\Models\Ticket;
+use Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
 class HelpDesk{
     /**
@@ -97,69 +99,38 @@ public function getDatePrefix()
 
     return $datePrefix;
 }
-function sendHtmlEmail($to, $subject, $message) {
-    $smtp_server = '';  // SMTP server
-    $smtp_port = 587;                            // SMTP port
-    $username = '';  // SMTP username
-    $password = '';                    // SMTP password
 
-    // Create a socket connection
-    $connection = fsockopen($smtp_server, $smtp_port);
+function sendEmail($to, $subject, $message) {
+    $mail = new PHPMailer(true); // Create a new PHPMailer instance
 
-    if (!$connection) {
-        die("Failed to connect to SMTP server.");
+    try {
+           
+        $mail->isSMTP();
+       // dd(config('mail.mailers.smtp.host'));
+       //$mail->Host       = config('mail.mailers.smtp.host');
+        $mail->Host       = config('mail.mailers.smtp.host');        // Specify main and backup SMTP servers
+        $mail->SMTPAuth   = true;
+        $mail->Username   = config('mail.mailers.smtp.username');
+        $mail->Password   = config('mail.mailers.smtp.password');
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = config('mail.mailers.smtp.port');
+
+        // Set the sender and recipient
+        $mail->setFrom(config('mail.mailers.smtp.username'), 'Support');
+        $mail->addAddress($to);
+        // Content
+        $mail->isHTML(true);                              // Set email format to HTML
+        $mail->Subject = $subject;
+        $mail->Body    = $message;
+        $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+
+        // Send the email
+        $mail->send();
+      
+        return 'Message has been sent';
+    } catch (Exception $e) {
+        return "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
     }
-
-    // Read server response
-    $response = fgets($connection, 512);
-    if (strpos($response, '220') === false) {
-        die("Error: " . $response);
-    }
-
-    // Send HELO command
-    fputs($connection, "HELO $smtp_server\r\n");
-    $response = fgets($connection, 512);
-
-    // Authenticate
-    fputs($connection, "AUTH LOGIN\r\n");
-    $response = fgets($connection, 512);
-
-    fputs($connection, base64_encode($username) . "\r\n");
-    $response = fgets($connection, 512);
-
-    fputs($connection, base64_encode($password) . "\r\n");
-    $response = fgets($connection, 512);
-
-    // Set the sender
-    fputs($connection, "MAIL FROM: <$username>\r\n");
-    $response = fgets($connection, 512);
-
-    // Set the recipient
-    fputs($connection, "RCPT TO: <$to>\r\n");
-    $response = fgets($connection, 512);
-
-    // Send data
-    fputs($connection, "DATA\r\n");
-    $response = fgets($connection, 512);
-
-    // Set headers for HTML email
-    fputs($connection, "Subject: $subject\r\n");
-    fputs($connection, "From: $username\r\n");
-    fputs($connection, "To: $to\r\n");
-    fputs($connection, "MIME-Version: 1.0\r\n");
-    fputs($connection, "Content-Type: text/html; charset=UTF-8\r\n");
-    fputs($connection, "Content-Transfer-Encoding: 8bit\r\n");  // Ensure correct encoding
-    fputs($connection, "\r\n");  // This empty line separates headers from the body
-
-    // Send the HTML message body
-    $message=view('mail.ticket_updated')->render();
-    fputs($connection, "$message\r\n.\r\n");
-    $response = fgets($connection, 512);
-
-    // Close connection
-    fputs($connection, "QUIT\r\n");
-    fclose($connection);
-
-    return "Email sent successfully!";
 }
+
 }
