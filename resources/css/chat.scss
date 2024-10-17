@@ -167,7 +167,11 @@ div.message > img {
     width: 280px;
     height: 280px;
 }
-div.user-comment-round  > img {
+div.message  img {
     width: 280px;
     height: 280px;
+}
+div.user-comment-round img {
+    width: 280px !important;
+    height: 280px !important;
 }

@@ -428,7 +428,7 @@ export default {
         const chatImg = document.querySelector(".chat-img");
         const chatImg2 = document.querySelector("figure.image > img");
         const chatImg3 = document.querySelector("div.message > img");
-        const chatImg4 = document.querySelector("div.user-comment-round  > img");
+        const chatImg4 = document.querySelector("div.user-comment-round img");
         if (chatImg) {
         alert(454);
             chatImg.addEventListener("click", this.openImagModal);
