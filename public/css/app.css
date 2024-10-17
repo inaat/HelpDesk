@@ -4703,7 +4703,7 @@ figure.image > img {
   width: 280px;
   height: 280px;
 }
-figure.image > img {
+div.message > img {
   width: 280px;
   height: 280px;
 }
