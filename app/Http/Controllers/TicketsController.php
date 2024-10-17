@@ -290,7 +290,7 @@ private function generateRandomEmail()
         } else {
             // Non-admin users can only view their own tickets
             $ticketQuery = Ticket::where($whereAll)
-                ->where('assigned_to', auth()->user()->id);
+                ->where('assigned_to', auth()->user()->id)->orWhere('contact_id', auth()->user()->id);
         }
         if (Request::has(['field', 'direction'])) {
             if (Request::input('field') == 'tech') {

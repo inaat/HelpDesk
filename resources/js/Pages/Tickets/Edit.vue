@@ -6,11 +6,12 @@
                 <form @submit.prevent="update" class="">
                     <div class=" flex flex-wrap p-2">
                         <!--Super Admin -->
-                        <select-edit-input v-if="auth.user.role.slug !== 'customer'" placeholder="Search customer" :onInput="doFilter" :items="customers"
+                        <select-edit-input v-if="auth.user.role.slug !== 'customer'"  placeholder="Search customer" :onInput="doFilter" :items="customers"
                                              v-model="form.user_id" :error="form.errors.user_id"
                                              class=" w-full lg:w-3/3" :label="__('Customer')"
-                                           :value="ticket.user" :editable="user_access.ticket.update && !ticket.closed">
-                        </select-edit-input>
+                                           :value="ticket.user"
+                                           :editable="user_access.ticket.update && !ticket.closed && 
+               (auth.user.role.slug !== 'agent' || auth.user.id === form.user_id)">                        </select-edit-input>
                    
                         <div class="assigned_user   w-full lg:w-3/3 flex flex-col">
                             <div class="font-bold text-sm mb-1">{{ __('Created') }} </div>
