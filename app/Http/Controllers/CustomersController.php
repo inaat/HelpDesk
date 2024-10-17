@@ -70,7 +70,7 @@ class CustomersController extends Controller {
         $userRequest = Request::validate([
             'first_name' => ['required', 'max:50'],
             'last_name' => ['nullable'],
-            'phone' => ['nullable', 'max:25'],
+            'phone' => ['required', 'max:25', 'phone', Rule::unique('users')],
             'organization_id' => ['required',Rule::exists('organizations', 'id')],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
             'password' => ['nullable'],
@@ -158,7 +158,11 @@ class CustomersController extends Controller {
         Request::validate([
             'first_name' => ['required', 'max:50'],
             'last_name' => ['nullable'],
-            'phone' => ['nullable', 'max:25'],
+            'phone' => [
+                'required',
+                'max:25',
+                'phone' .  Rule::unique('users')->ignore($user->id), // Assuming you're using route model binding
+            ],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable'],
             'city' => ['nullable'],

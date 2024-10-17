@@ -26,7 +26,8 @@ $customers = User::with('organization')
         $q->whereHas('organization', function ($orgQuery) use ($searchQuery) {
             // Search by organization customer number or name
             $orgQuery->where('customer_no', 'LIKE', '%' . $searchQuery . '%')
-                     ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
+                     ->orWhere('name', 'LIKE', '%' . $searchQuery . '%')
+                     ->orWhere('name_en', 'LIKE', '%' . $searchQuery . '%');
         });
     })
     ->orWhere('users.first_name', 'LIKE', '%' . $searchQuery . '%') // Also search by user name

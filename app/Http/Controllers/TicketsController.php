@@ -259,6 +259,8 @@ private function generateRandomEmail()
         $byCustomer = null;
         $byAssign = null;
         $user = Auth()->user();
+        $ticketQuery = Ticket::query();
+
         $hiddenFields = Setting::where('slug', 'hide_ticket_fields')->first();
         if (in_array($user['role']['slug'], ['customer'])) {
             $byCustomer = $user['id'];
@@ -268,6 +270,7 @@ private function generateRandomEmail()
             $byAssign = Request::input('assigned_to');
         }
         $whereAll = [];
+        $status_id= Request::input('status_id');
         $type = Request::input('type');
         $limit = Request::input('limit', 10);
         $customer = Request::input('customer_id');
@@ -283,14 +286,6 @@ private function generateRandomEmail()
             $whereAll[] = ['status_id', '!=', $opened_status->id];
         } elseif ($type == 'new') {
             $whereAll[] = ['created_at', '>=', date('Y-m-d') . ' 00:00:00'];
-        }
-        if (auth()->user()->role->slug == 'admin') {
-            // Admin can view all tickets
-            $ticketQuery = Ticket::where($whereAll);
-        } else {
-            // Non-admin users can only view their own tickets
-            $ticketQuery = Ticket::where($whereAll)
-                ->where('assigned_to', auth()->user()->id)->orWhere('contact_id', auth()->user()->id);
         }
         if (Request::has(['field', 'direction'])) {
             if (Request::input('field') == 'tech') {
@@ -318,8 +313,6 @@ private function generateRandomEmail()
                 $endDate 
             ]);
         } elseif ($startDate) {
-
-      
             $startDate = Carbon::createFromFormat('d-m-Y H:i:s', $startDate.' 00:00:00')->format('Y-m-d');
             $ticketQuery = $ticketQuery->whereDate('created_at',  $startDate );
         } elseif ($endDate) {
@@ -328,6 +321,23 @@ private function generateRandomEmail()
             $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate );
         }
 
+        if (auth()->user()->role->slug == 'admin') {
+            // Admin can view all tickets
+            $ticketQuery = $ticketQuery->where($whereAll);
+            if(empty($status_id)){
+                
+            $opened_status = Status::where('slug', 'like', '%closed%')->first();
+            $ticketQuery=$ticketQuery->where('status_id', '!=',$opened_status->id);
+            }
+        } else {
+            // Non-admin users can only view their own tickets
+            $ticketQuery = $ticketQuery->where($whereAll)
+                ->where(function($query) {
+                    $query->where('assigned_to', auth()->user()->id)
+                          ->orWhere('contact_id', auth()->user()->id);
+                });
+        }
+    
         return Inertia::render('Tickets/Index', [
             'title' => 'Tickets',
             'filters' => Request::all(),
