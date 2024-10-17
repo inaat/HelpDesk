@@ -428,6 +428,7 @@ export default {
         const chatImg = document.querySelector(".chat-img");
         const chatImg2 = document.querySelector("figure.image > img");
         const chatImg3 = document.querySelector("div.message > img");
+        const chatImg4 = document.querySelector("div.user-comment-round  > img");
         if (chatImg) {
         alert(454);
             chatImg.addEventListener("click", this.openImagModal);
@@ -437,6 +438,9 @@ export default {
         }
         if (chatImg3) {
             chatImg3.addEventListener("click", this.openImagModal);
+        }
+        if (chatImg4) {
+            chatImg4.addEventListener("click", this.openImagModal);
         }
         const pdf = document.querySelector(".chat-pdf");
         if (pdf) {
