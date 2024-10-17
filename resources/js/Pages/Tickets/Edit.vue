@@ -427,11 +427,16 @@ export default {
     mounted() {
         const chatImg = document.querySelector(".chat-img");
         const chatImg2 = document.querySelector("figure.image > img");
+        const chatImg3 = document.querySelector("div.message > img");
         if (chatImg) {
+        alert(454);
             chatImg.addEventListener("click", this.openImagModal);
         }
         if (chatImg2) {
             chatImg2.addEventListener("click", this.openImagModal);
+        }
+        if (chatImg3) {
+            chatImg3.addEventListener("click", this.openImagModal);
         }
         const pdf = document.querySelector(".chat-pdf");
         if (pdf) {

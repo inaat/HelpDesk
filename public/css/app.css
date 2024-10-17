@@ -4703,6 +4703,10 @@ figure.image > img {
   width: 280px;
   height: 280px;
 }
+figure.image > img {
+  width: 280px;
+  height: 280px;
+}
 .badge__item {
   display: flex;
   justify-content: space-between;
