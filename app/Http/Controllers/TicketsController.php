@@ -487,22 +487,25 @@ private function generateRandomEmail()
             //     ->get()
             //     ->map
             //     ->only('id', 'name'),
-            'customers' => User::with('organization') // Eager load the organization relationship
-            ->where('role_id', $roles['customer'] ?? 0)
-            ->orWhere('id', Request::input('customer_id'))
-            //->orderBy('first_name')
-            ->limit(6)
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-              // Concatenate organization customer number, organization name, user name, and phone number
+          'customers' => User::with('organization') // Eager load the organization relationship
+    ->where('users.role_id', $roles['customer'] ?? 0)
+    ->orWhere('users.id', Request::input('customer_id')) // Specify 'users.id' to avoid ambiguity
+    ->Join('organizations', 'users.organization_id', '=', 'organizations.id') // Join the organizations table
+    ->orderBy('organizations.customer_no') // Order by customer_no in the organizations table
+    ->select('users.*') // Ensure only user attributes are selected
+    ->limit(30)
+    ->get()
+    ->map(function ($user) {
+        return [
+            'id' => $user->id,
+            // Concatenate organization customer number, organization name, user name, and phone number
             'name' => ($user->organization 
-            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
-            : '') . 
-            $user->name . ' ' . $user->phone,
-                ];
-            }),
+                ? '(' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+                : '') . 
+                $user->name . ' ' . $user->phone,
+        ];
+    }),
+
             'usersExceptCustomers' => User::where('role_id', '!=', $roles['customer'] ?? 0)
                 ->orWhere('id', Request::input('user_id'))
                 ->orderBy('first_name')
@@ -799,7 +802,7 @@ private function generateRandomEmail()
                 str_replace('&nbsp;', "\n\n", $update_message)
             );}
             if(!empty( $email)){
-            dd(event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message])));
+            event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
             }
         }
 

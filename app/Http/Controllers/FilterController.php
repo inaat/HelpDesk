@@ -18,32 +18,36 @@ class FilterController extends Controller {
         $searchQuery = Request::input('search');
     
         // Fetch customers
-        $customers = User::with('organization')
-            ->where('role_id', $customerRole ? $customerRole->id : 0)
-            ->when($searchQuery, function ($query, $searchQuery) {
-                $query->where(function ($q) use ($searchQuery) {
-                    $q->whereHas('organization', function ($orgQuery) use ($searchQuery) {
-                        // Search by organization customer number or name
-                        $orgQuery->where('customer_no', 'LIKE', '%' . $searchQuery . '%')
-                                 ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
-                    });
-                });
-              //  ->orWhere('name', 'LIKE', '%' . $searchQuery . '%') // Also search by user name
-               // ->orWhere('phone', 'LIKE', '%' . $searchQuery . '%'); // And phone number
-            })
-            ->limit(30)
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    // Concatenate organization customer number, organization name, user name, and phone number
-                    'name' => ($user->organization 
-                        ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
-                        : '') . 
-                        $user->name . ' ' . $user->phone,
-                ];
-            });
-    
+    // Fetch customers
+$customers = User::with('organization')
+->where('role_id', $customerRole ? $customerRole->id : 0)
+->when($searchQuery, function ($query, $searchQuery) {
+    $query->where(function ($q) use ($searchQuery) {
+        $q->whereHas('organization', function ($orgQuery) use ($searchQuery) {
+            // Search by organization customer number or name
+            $orgQuery->where('customer_no', 'LIKE', '%' . $searchQuery . '%')
+                     ->orWhere('name', 'LIKE', '%' . $searchQuery . '%');
+        });
+    })
+    ->orWhere('users.first_name', 'LIKE', '%' . $searchQuery . '%') // Also search by user name
+    ->orWhere('users.phone', 'LIKE', '%' . $searchQuery . '%'); // And phone number
+})
+->Join('organizations', 'users.organization_id', '=', 'organizations.id') // Join organizations table
+->orderBy('organizations.customer_no') // Order by customer_no from the organizations table
+->select('users.*') // Select only user attributes to avoid conflicts
+->limit(30)
+->get()
+->map(function ($user) {
+    return [
+        'id' => $user->id,
+        // Concatenate organization customer number, organization name, user name, and phone number
+        'name' => ($user->organization 
+            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+            : '') . 
+            $user->name . ' ' . $user->phone,
+    ];
+});
+
         return response()->json($customers);
     }
     
