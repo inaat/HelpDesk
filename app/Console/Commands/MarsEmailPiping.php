@@ -126,7 +126,7 @@ class MarsEmailPiping extends Command {
             'response' => null,
             'due' => null,
             'assigned_to'=>   2,
-            'contact_id'=>$contact_id,
+            'contact_id'=>2,
             'department_id' => 5,
             'status_id' => 2,
             'priority_id'=>3,
