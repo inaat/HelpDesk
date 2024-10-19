@@ -766,7 +766,7 @@ private function generateRandomEmail()
 
         $update_message = null;
         if ($closed_status && ($ticket->status_id != $closed_status->id) && $request_data['status_id'] == $closed_status->id) {
-            $update_message =  "تم إغلاق التذكرة.  #" . $ticket->uid;
+            $update_message =  "تم إغلاق التذكرة.  #" . $ticket->uid .'نرجو عدم الرد على هذه التذكرة إلا في حالة الرغبة في طلب جديد';
             $ticket->update(['close' => now()]);
         }
         //  elseif ($ticket->status_id != $request_data['status_id']) {
