@@ -337,7 +337,7 @@ private function generateRandomEmail()
                           ->orWhere('contact_id', auth()->user()->id);
                 });
         }
-    
+        $ticketQuery = $ticketQuery->orderBy('uid', 'desc');
         return Inertia::render('Tickets/Index', [
             'title' => 'Tickets',
             'filters' => Request::all(),

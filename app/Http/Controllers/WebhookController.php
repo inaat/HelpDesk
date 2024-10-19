@@ -26,10 +26,10 @@ class WebhookController extends Controller
         $webhookData = $request->all();
         Log::info('Received Webhook:', $webhookData);
         $details = '';
-
+        $ticket_create=false;
         // Handle messages
         if (isset($webhookData['body']['message'])) {
-            $this->handleMessages($webhookData, $details);
+            $this->handleMessages($webhookData, $details , $ticket_create);
         } else {
             Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
         }
@@ -37,7 +37,7 @@ class WebhookController extends Controller
         return response()->json(['message' => 'Webhook received'], 200);
     }
 
-    private function handleMessages($webhookData, &$details)
+    private function handleMessages($webhookData, &$details ,$ticket_create)
     {
         $messageId = $webhookData['body']['key']['id'] ?? null;
         $messageData = $webhookData['body']['message'];
@@ -47,24 +47,36 @@ class WebhookController extends Controller
             $documentMessage = isset($messageData['documentMessage'])
                 ? $messageData['documentMessage']
                 : $messageData['documentWithCaptionMessage']['message']['documentMessage'];
+            $ticket_create=true;  
             $this->processDocument($documentMessage, $webhookData, $messageId, $details);
         }
 
         // Handle audio messages
         if (isset($messageData['audioMessage'])) {
+            $ticket_create=true;  
             $this->processAudio($webhookData, $messageId, $details);
         }
 
         // Handle video messages
         if (isset($messageData['videoMessage'])) {
+            $ticket_create=true;  
+           
             $this->processVideo($webhookData, $messageId, $details);
         }
+            // Handle text messages
+            $msgText = $messageData['conversation'] ?? ($messageData['extendedTextMessage']['text'] ?? null);
+            if ($msgText) {
+                if (strlen($msgText) > 13) {
+                    $ticket_create=true;
+                
+                }
+            }
 
         // Handle text and image messages
-        $this->processTextAndImage($webhookData, $messageData, $details);
+        $this->processTextAndImage($webhookData, $messageData, $details ,$ticket_create);
     }
 
-    private function processDocument($documentMessage, $webhookData, $messageId, &$details)
+    private function processDocument($documentMessage, $webhookData, $messageId, &$details )
     {
         $fileName = $documentMessage['fileName'];
         $caption = $documentMessage['caption'] ?? '';
@@ -88,14 +100,14 @@ class WebhookController extends Controller
         }
     }
 
-    private function processAudio($webhookData, $messageId, &$details)
+    private function processAudio($webhookData, $messageId, &$details )
     {
         $msgContent = $webhookData['body']['msgContent'];
         $this->saveAudioFromBase64($msgContent, $messageId);
         $details .= $this->generateAudioHtml($messageId);
     }
 
-    private function processVideo($webhookData, $messageId, &$details)
+    private function processVideo($webhookData, $messageId, &$details )
     {
         $msgContent = $webhookData['body']['msgContent'];
         $caption = $webhookData['body']['message']['videoMessage']['caption'] ?? null;
@@ -105,8 +117,9 @@ class WebhookController extends Controller
         $details .= "<p>$videoHtml $caption</p>";
     }
 
-    private function processTextAndImage($webhookData, $messageData, &$details)
-    {
+    private function processTextAndImage($webhookData, $messageData, &$details  ,$ticket_create)
+    {   
+       
         $remoteJid = $webhookData['body']['key']['remoteJid'] ?? null;
         $mobile_no = null;
 
@@ -114,10 +127,12 @@ class WebhookController extends Controller
         $msgText = $messageData['conversation'] ?? ($messageData['extendedTextMessage']['text'] ?? null);
         if ($msgText) {
             $details .= "<p>$msgText</p>";
+            
         }
 
         // Handle image messages
         if (isset($messageData['imageMessage'])) {
+            $ticket_create=true;
             $this->processImage($messageData['imageMessage'], $webhookData, $details);
         }
 
@@ -128,7 +143,7 @@ class WebhookController extends Controller
         }
 
         // Handle user and ticket creation logic
-        $this->handleUserAndTicket($mobile_no, $details);
+        $this->handleUserAndTicket($mobile_no, $details,$msgText,$ticket_create);
     }
 
     private function processImage($imageMessage, $webhookData, &$details)
@@ -149,7 +164,7 @@ class WebhookController extends Controller
         Log::info('Image saved to:', [$filePath]);
     }
 
-    private function handleUserAndTicket($mobile_no, $details)
+    private function handleUserAndTicket($mobile_no, $details,$msgText,$ticket_create)
     {
         $assigned_to = null;
         $assigned_phone = null;
@@ -251,7 +266,13 @@ class WebhookController extends Controller
                 'user_id' => $user->id,
             ]);
         } else {
+            $subject='No Subject';
+            if ($msgText) {
+                $subject = $msgText;
+                
+            }
             // Create a new ticket
+           if($ticket_create){
             $request_data = [
                 'user_id' => $customer ? $customer->id : null,
                 'department_id' => $assigned_to ? $assigned_to->department_id : 2,
@@ -259,7 +280,7 @@ class WebhookController extends Controller
                 'priority_id' => 3,
                 'type_id' => 4,
                 'assigned_to' => $assigned_to ? $assigned_to->id : 1,
-                'subject' => "No Subject", // Default subject if empty
+                'subject' =>  $ticket_create .  $subject, // Default subject if empty
                 'details' => $details,
                 'contact_id'=> $assigned_to ? $assigned_to->id : null,
             ];
@@ -268,12 +289,13 @@ class WebhookController extends Controller
             $ticket = Ticket::create($request_data);
             $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
             $ticket->save();
-
+          
             // Send notification messages
-            $this->whatsappApiService->sendTestMsg('888', $customer->phone, "Your ticket #$ticket->uid");
+            $this->whatsappApiService->sendTestMsg('onayat', $customer->phone, "Your ticket #$ticket->uid");
             if (!empty($assigned_phone)) {
-                $this->whatsappApiService->sendTestMsg('888', $assigned_phone, "Your ticket #$ticket->uid");
+                $this->whatsappApiService->sendTestMsg('onayat', $assigned_phone, "Your ticket #$ticket->uid");
             }
+        }
         }
         return response()->json(['message' => 'Webhook received'], 200);
 
