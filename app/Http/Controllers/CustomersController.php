@@ -70,7 +70,7 @@ class CustomersController extends Controller {
         $userRequest = Request::validate([
             'first_name' => ['required', 'max:50'],
             'last_name' => ['nullable'],
-            'phone' => ['required', 'max:25', 'phone', Rule::unique('users')],
+            'phone' => ['required'],
             'organization_id' => ['required',Rule::exists('organizations', 'id')],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')],
             'password' => ['nullable'],
