@@ -159,9 +159,7 @@ class CustomersController extends Controller {
             'first_name' => ['required', 'max:50'],
             'last_name' => ['nullable'],
             'phone' => [
-                'required',
-                'max:25',
-                'phone' .  Rule::unique('users')->ignore($user->id), // Assuming you're using route model binding
+                'required'
             ],
             'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable'],
