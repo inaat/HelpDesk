@@ -595,8 +595,16 @@ private function generateRandomEmail()
 
         $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
         $ticket->save();
-
-        event(new TicketCreated(['ticket_id' => $ticket->id]));
+        
+        if (!empty($ticket->user->phone && $ticket->type_id===2)) {
+            $response = $this->whatsappApiService->sendTestMsg(
+                '888',
+                $ticket->user->phone,
+                str_replace('&nbsp;', "\n\n",   "فتح تذكرة رقم.  #" . $ticket->uid)
+                
+            );
+        }
+        //event(new TicketCreated(['ticket_id' => $ticket->id]));
 
         if (!empty($ticket->assigned_to)) {
             event(new AssignedUser($ticket->id));
@@ -758,16 +766,17 @@ private function generateRandomEmail()
 
         $update_message = null;
         if ($closed_status && ($ticket->status_id != $closed_status->id) && $request_data['status_id'] == $closed_status->id) {
-            $update_message = "The ticket has been closed.Ticket Number #$ticket->uid";
+            $update_message =  "تم إغلاق التذكرة.  #" . $ticket->uid;
             $ticket->update(['close' => now()]);
-        } elseif ($ticket->status_id != $request_data['status_id']) {
-            $update_message = "The status has been changed for this ticket. Ticket Number #$ticket->uid";
+        }
+        //  elseif ($ticket->status_id != $request_data['status_id']) {
+        //     $update_message = "The status has been changed for this ticket. Ticket Number #$ticket->uid";
 
-        }
+        // }
         
-        if ($ticket->priority_id != $request_data['priority_id']) {
-            $update_message = "The priority has been changed for this ticket. Ticket Number #$ticket->uid";
-        }
+        // if ($ticket->priority_id != $request_data['priority_id']) {
+        //     $update_message = "The priority has been changed for this ticket. Ticket Number #$ticket->uid";
+        // }
 
         if (empty($ticket->response) && $user['role']['slug'] === 'admin') {
             $request_data['response'] = date('Y-m-d H:i:s');
