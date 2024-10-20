@@ -296,7 +296,8 @@ private function generateRandomEmail()
                 $ticketQuery->orderBy(Request::input('field'), Request::input('direction'));
             }
         } else {
-            $ticketQuery->orderBy('updated_at', 'DESC');
+            
+            $ticketQuery->orderBy('uid', 'DESC');
         }
         // Date filtering
         $startDate = Request::input('startDate');
