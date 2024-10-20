@@ -94,53 +94,68 @@ class PippingEmail extends Command {
         return $user;
     }
 
-    private function createTicket($user, $subject, $body, $plainBody ,$assigned_to,$from) {
+    private function createTicket($user, $subject, $body, $plainBody, $assigned_to, $from) {
         $combinedBody = $body . "\n\n" . strip_tags($plainBody); // Use strip_tags to remove HTML from plain body
-        $customer=null;
+        $customer = null;
+        
+        // Extract customer number from subject if it exists
         preg_match('/#(\d+)/', $subject, $matchesCustomer);
-            if (!empty($matchesCustomer)) {
-                $customer_no = str_replace('#', '', $matchesCustomer[0]);
-                $subject=  str_replace('#'.$customer_no, '', $subject);
-                $og = Organization::Where('customer_no', $customer_no)->first();
-                
-                if (!empty($og)) {
-                    $user = User::where('organization_id', $og->id)->first();
-                    $customer = $user ? $user : null;
-                }
+        if (!empty($matchesCustomer)) {
+            $customer_no = str_replace('#', '', $matchesCustomer[0]);
+            $subject = str_replace('#'.$customer_no, '', $subject);
+            $og = Organization::where('customer_no', $customer_no)->first();
+            
+            if (!empty($og)) {
+                $user = User::where('organization_id', $og->id)->first();
+                $customer = $user ? $user : null;
             }
-        if(empty($customer)){
-            $customer=$user;
         }
-        $contact_id=null;
-        if(!empty($from)){
+    
+        if (empty($customer)) {
+            $customer = $user;
+        }
+    
+        $contact_id = null;
+        if (!empty($from)) {
             $email_array = User::where('role_id', 5)->pluck('email')->toArray();
-            // Check if the mobile number exists in the phone array
             if (in_array($from, $email_array)) {
                 $contact_id = User::where('email', $from)->first()->id;
             }
-
         }
+    
+        // Check if a similar ticket already exists to avoid duplicates
+        $existingTicket = Ticket::where('subject', $subject)
+            ->where('user_id', $customer->id)
+            ->where('status_id', 2) // Assuming 2 represents "open" status, adjust this based on your system
+            ->first();
+    
+        if ($existingTicket) {
+            Log::info("A ticket with subject '$subject' already exists for user {$customer->id}. No new ticket created.");
+            return $existingTicket; // Return the existing ticket to avoid duplicate creation
+        }
+    
+        // Create new ticket if no duplicate is found
         $ticket = Ticket::factory()->create([
             'subject' => $subject,
-            'details' =>     $combinedBody ,
+            'details' => $combinedBody,
             'user_id' => $customer->id,
             'open' => now(),
             'response' => null,
             'due' => null,
-            'assigned_to'=> $assigned_to ? $assigned_to->id : 1,
-            'contact_id'=>$contact_id,
-            'department_id' =>$assigned_to ? $assigned_to->department_id : 2,
+            'assigned_to' => $assigned_to ? $assigned_to->id : 1,
+            'contact_id' => $contact_id,
+            'department_id' => $assigned_to ? $assigned_to->department_id : 2,
             'status_id' => 2,
-            'priority_id'=>3,
-            'type_id'=>6,
+            'priority_id' => 3,
+            'type_id' => 6,
         ]);
-
+    
         $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
         $ticket->save();
-
+    
         return $ticket;
     }
-
+    
     private function processAttachments($message, $ticket, $user) {
         $message->getAttachments()->each(function ($attachment) use ($message, $ticket, $user) {
             $origin_name = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $message->getMessageId() . '_' . $attachment->name);
