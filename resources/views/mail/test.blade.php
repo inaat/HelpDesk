@@ -4,7 +4,7 @@
   
 </head>
 <body>
-    <h1>Hello</h1> <!-- Greeting added here -->
+    <h1> 'أهلا وسهلا, سوف يتم فتح تذكرة وإبلاغك بها'</h1> <!-- Greeting added here -->
   
     
 </body>

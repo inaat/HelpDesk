@@ -83,7 +83,8 @@ class PippingEmail extends Command
 
                                     );
                                     if (!empty($ticket->user->email)) {
-                                        app(abstract: 'App\HelpDesk')->sendEmail($ticket->user->email, "Reply: $ticket->subject", $message);
+
+                                        app(abstract: 'App\HelpDesk')->sendEmail($ticket->user->email, "Reply: $ticket->subject", view('mail.test'));
                                     }
                                 }
                             }
