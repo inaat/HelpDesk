@@ -829,9 +829,8 @@ private function generateRandomEmail()
             );}
             if(!empty( $email)){
               $message=$update_message;
-           dd(app(abstract: 'App\HelpDesk')->sendEmail(  $email,  '[Ticket#'.$ticket->uid.'] - '.$update_message,  view('mail.test', compact('message'))->render() ));
-    
-                    
+             app(abstract: 'App\HelpDesk')->sendEmail(  $email,  '[Ticket#'.$ticket->uid.'] - '.$update_message,  view('mail.test', compact('message'))->render() );
+      
             // event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
             }
         }
