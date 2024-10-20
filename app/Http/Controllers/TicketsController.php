@@ -828,8 +828,8 @@ private function generateRandomEmail()
                 str_replace('&nbsp;', "\n\n", $update_message)
             );}
             if(!empty( $email)){
-             
-             app(abstract: 'App\HelpDesk')->sendEmail(  $email,  '[Ticket#'.$ticket->uid.'] - Injazat Support',  view('mail.test', compact('ticket'))->render() );
+              $message=$ticket;
+             app(abstract: 'App\HelpDesk')->sendEmail(  $email,  '[Ticket#'.$ticket->uid.'] - Injazat Support',  view('mail.test', compact('message'))->render() );
       
             // event(new TicketUpdated(['ticket_id' => $ticket->id, 'update_message' => $update_message]));
             }
