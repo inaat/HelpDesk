@@ -828,7 +828,7 @@ private function generateRandomEmail()
                 str_replace('&nbsp;', "\n\n", $update_message)
             );}
             if(!empty( $email)){
-              $massage=$update_message;
+              $message=$update_message;
            dd(app(abstract: 'App\HelpDesk')->sendEmail(  $email,  '[Ticket#'.$ticket->uid.'] - '.$update_message,  view('mail.test', compact('message'))->render() ));
     
                     
