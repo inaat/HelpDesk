@@ -126,6 +126,8 @@ function sendEmail($to, $subject, $message) {
 
         // Set encoding to UTF-8
         $mail->CharSet = 'UTF-8'; // Set character set to UTF-8
+        $mail->Headers = 'Content-Type: text/html; charset=UTF-8' . "\r\n"; // Ensure content type is UTF-8
+
         // Send the email
         $mail->send();
       
