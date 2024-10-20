@@ -246,12 +246,15 @@
                 class="preview-image"
                 :alt="selectedFile.name"
               />
-              <iframe
+              <iframe  v-else :src="fileUrl" frameborder="0" style="width: 100%; height: 100vh;"></iframe>
+
+              <!-- <iframe
                 v-else
                 :src="fileUrl"
                 class="preview-frame"
                 frameborder="0">
-              </iframe>
+              </iframe> -->
+              
             </div>
             <div v-else class="no-preview">
               <p>This file type cannot be previewed.</p>
@@ -553,7 +556,11 @@ export default {
     } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'].includes(fileExtension)) {
         // For office documents and text files, we might need to use a viewer service
         // This is a placeholder URL - you'd need to implement a viewer service
-        this.fileUrl = `/api/view-document/${file.id}`;
+        //this.fileUrl = `/api/view-document/${file.id}`;
+
+      
+        this.fileUrl = `https://view.officeapps.live.com/op/view.aspx?src=${window.location.origin}/files/${file.path}`;
+
     } else {
         // For other file types, we'll just provide a download link
         this.fileUrl = null;
