@@ -802,6 +802,7 @@ private function generateRandomEmail()
                 str_replace('&nbsp;', "\n\n",  $originator_inform)
                 
             );
+            dd($response);
             if(!empty( $ticket->contact->email)){
               
                 app(abstract: 'App\HelpDesk')->sendEmail(  $ticket->contact->email,  '[Ticket#'.$ticket->uid.'] - '.$originator_inform, $originator_inform);
