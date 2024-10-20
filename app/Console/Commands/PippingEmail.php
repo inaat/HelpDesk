@@ -7,20 +7,28 @@ use App\Models\Organization;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\WhatsappApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Webklex\IMAP\Facades\Client;
 
-class PippingEmail extends Command {
+class PippingEmail extends Command
+{
     protected $signature = 'command:piping_email';
     protected $description = 'Process emails from inbox to create tickets, including CC information';
 
-    public function __construct()
+ 
+
+    private $whatsappApiService;
+
+    public function __construct(WhatsappApiService $whatsappApiService)
     {
         parent::__construct();
-    }
 
-    public function handle() {
+        $this->whatsappApiService = $whatsappApiService;
+    }
+    public function handle()
+    {
         $client = Client::account('default');
 
         if (!$client->connect()) {
@@ -31,7 +39,7 @@ class PippingEmail extends Command {
         while (true) {
             try {
                 $inbox = $client->getFolder('INBOX');
-                $messages =  $inbox->messages()->unseen()->get();
+                $messages = $inbox->messages()->unseen()->get();
 
                 foreach ($messages as $message) {
                     $from = $message->getFrom();
@@ -45,27 +53,44 @@ class PippingEmail extends Command {
                         Log::warning("From data is not valid for message ID: " . $message->getMessageId());
                         continue;
                     }
-              
+
                     $user = $this->getOrCreateUser($fromData);
 
                     $subject = $message->getSubject();
                     $body = $message->getHTMLBody();
                     $plainBody = $message->getTextBody(); // Get plain text body
                     $messageId = $message->getMessageId()[0] ?? null;
-                    $from= $fromData->mail;
+                    $from = $fromData->mail;
                     if (!empty($messageId)) {
                         $cc = $message->getCc();
                         $assigned_to = null;
-                        
+
                         if (!empty($cc) && isset($cc[0]->mail)) {
                             $assignedUser = User::where('email', $cc[0]->mail)->first();
-                            $assigned_to = $assignedUser ;
+                            $assigned_to = $assignedUser;
                         }
-                        $ticket = $this->createTicket($user, $subject, $body, $plainBody , $assigned_to,  $from);
-                        $this->processAttachments($message, $ticket, $user);
-                        $message->setFlag('SEEN');
+                        if (!empty($user)) {
+                            $ticket = $this->createTicket($user, $subject, $body, $plainBody, $assigned_to, $from);
+                            $this->processAttachments($message, $ticket, $user);
+                            $message->setFlag('SEEN');
+                            if (!empty($ticket->user)) {
+                                $message = 'أهلا وسهلا, سوف يتم فتح تذكرة وإبلاغك بها';
+                                if (!empty($ticket->user->phone)) {
+                                    $response = $this->whatsappApiService->sendTestMsg(
+                                        '888',
+                                        $ticket->user->phone,
+                                        $message
+
+                                    );
+                                    if (!empty($ticket->user->email)) {
+                                        app(abstract: 'App\HelpDesk')->sendEmail($ticket->user->email, "Reply: $ticket->subject", $message);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+
 
             } catch (\Exception $e) {
                 Log::error("An error occurred: " . $e->getMessage());
@@ -76,45 +101,37 @@ class PippingEmail extends Command {
         return 0;
     }
 
-    private function getOrCreateUser($fromData) {
+    private function getOrCreateUser($fromData)
+    {
         $user = User::where('email', $fromData->mail)->first();
 
-        if (empty($user)) {
-            $role = Role::where('slug', 'customer')->first();
-            $name = $this->split_name($fromData->personal);
-            $user = User::create([
-                'email' => $fromData->mail,
-                'password' => bcrypt('secret'),
-                'role_id' => $role->id ?? 5,
-                'first_name' => $name[0],
-                'last_name' => $name[1]
-            ]);
-        }
+
 
         return $user;
     }
 
-    private function createTicket($user, $subject, $body, $plainBody, $assigned_to, $from) {
+    private function createTicket($user, $subject, $body, $plainBody, $assigned_to, $from)
+    {
         $combinedBody = $body . "\n\n" . strip_tags($plainBody); // Use strip_tags to remove HTML from plain body
         $customer = null;
-        
+
         // Extract customer number from subject if it exists
         preg_match('/#(\d+)/', $subject, $matchesCustomer);
         if (!empty($matchesCustomer)) {
             $customer_no = str_replace('#', '', $matchesCustomer[0]);
-            $subject = str_replace('#'.$customer_no, '', $subject);
+            $subject = str_replace('#' . $customer_no, '', $subject);
             $og = Organization::where('customer_no', $customer_no)->first();
-            
+
             if (!empty($og)) {
                 $user = User::where('organization_id', $og->id)->first();
                 $customer = $user ? $user : null;
             }
         }
-    
+
         if (empty($customer)) {
             $customer = $user;
         }
-    
+
         $contact_id = null;
         if (!empty($from)) {
             $email_array = User::where('role_id', 5)->pluck('email')->toArray();
@@ -122,18 +139,18 @@ class PippingEmail extends Command {
                 $contact_id = User::where('email', $from)->first()->id;
             }
         }
-    
+
         // Check if a similar ticket already exists to avoid duplicates
         $existingTicket = Ticket::where('subject', $subject)
             ->where('user_id', $customer->id)
             ->where('status_id', 2) // Assuming 2 represents "open" status, adjust this based on your system
             ->first();
-    
+
         if ($existingTicket) {
             Log::info("A ticket with subject '$subject' already exists for user {$customer->id}. No new ticket created.");
             return $existingTicket; // Return the existing ticket to avoid duplicate creation
         }
-    
+
         // Create new ticket if no duplicate is found
         $ticket = Ticket::factory()->create([
             'subject' => $subject,
@@ -149,14 +166,15 @@ class PippingEmail extends Command {
             'priority_id' => 3,
             'type_id' => 6,
         ]);
-    
+
         $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
         $ticket->save();
-    
+
         return $ticket;
     }
-    
-    private function processAttachments($message, $ticket, $user) {
+
+    private function processAttachments($message, $ticket, $user)
+    {
         $message->getAttachments()->each(function ($attachment) use ($message, $ticket, $user) {
             $origin_name = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $message->getMessageId() . '_' . $attachment->name);
             $directory = public_path('files/tickets/');
@@ -182,7 +200,8 @@ class PippingEmail extends Command {
         });
     }
 
-    private function split_name($name) {
+    private function split_name($name)
+    {
         $name = trim($name);
         $last_name = (strpos($name, ' ') === false) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
         $first_name = trim(preg_replace('#' . preg_quote($last_name, '#') . '#', '', $name));
