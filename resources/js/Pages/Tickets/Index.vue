@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="flex flex-col gap-3 mb-4 md:flex-row w-full items-center ticket-filters">
-            <div class="mr-2 w-full">{{ __('Filter By') }}:</div>
+            <div class="mr-2 w-full">{{ __('Filter by') }}:</div>
             <select-input v-if="!(hidden_fields && hidden_fields.includes('ticket_type'))" v-model="form.type_id"
                 class="mr-2 w-full">
                 <option :value="null">{{ __('Type') }}</option>
@@ -219,7 +219,7 @@ export default {
             headers: [
                 { name: 'Key', value: 'id', sort: true },
                 { name: 'Subject', value: 'subject', sort: true },
-                { name: 'Ticket Type', value: 'ticketType', sort: true },
+                { name: 'Ticket type', value: 'ticketType', sort: true },
 
                 { name: 'Priority', value: 'priority_id', sort: true },
                 { name: 'Status', value: 'status_id', sort: true },
