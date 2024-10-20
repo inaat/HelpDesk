@@ -99,7 +99,7 @@
 
                         <!-- Super Admin Comment -->
                         <!-- <input ref="file" type="file" accept=".xlsx,.xls,image/*,.doc, .docx,.ppt, .pptx,.txt,.pdf, .zip" class="hidden" multiple="multiple" @change="fileInputChange" /> -->
-                        <div class=" w-full lg:w-full inline-block bg-gray-300 user-comment-round p-2 px-3 text-gray-70 ">
+                        <div class=" w-full lg:w-full inline-block bg-blue user-comment-round p-2 px-3 text-gray-70 ">
                             <!-- <button type="button" class="btn flex justify-center items-center pb-3 border-0 pl-0" @click="fileBrowse">
                                 <icon name="file" class="flex-shrink-0 h-5 fill-gray-400 pr-1" /> <strong>{{ __('Attach File') }}</strong>
                             </button> -->
