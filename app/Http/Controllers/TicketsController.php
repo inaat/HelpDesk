@@ -653,7 +653,7 @@ private function generateRandomEmail()
   $statusQuery = Status::orderBy('name');
         
   if ($user->role->slug === 'agent') {
-     if($user->id!=$ticket->contact_id){
+     if($user->id!=$ticket->contact_id && !empty($ticket->contact_id)){
       $statusQuery->whereNotIn('id', [4]);
      }
   }
