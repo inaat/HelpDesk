@@ -5,6 +5,8 @@
     <title>Email</title>
 </head>
 <body>
-    <h1>{{ $message }}</h1> <!-- The message will follow the RTL direction -->
+    <h1>
+        تم فتح تذكرة رقم #{{ $ticket->uid }} مع المندوب {{ $ticket->assignedTo->first_name }}
+    </h1> <!-- The message will follow the RTL direction -->
 </body>
 </html>
