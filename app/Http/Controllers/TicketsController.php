@@ -336,6 +336,11 @@ private function generateRandomEmail()
                     $query->where('assigned_to', auth()->user()->id)
                           ->orWhere('contact_id', auth()->user()->id);
                 });
+                    if(empty($status_id)){
+                
+            $opened_status = Status::where('slug', 'like', '%closed%')->first();
+            $ticketQuery=$ticketQuery->where('status_id', '!=',$opened_status->id);
+            }
         }
         $ticketQuery = $ticketQuery->orderBy('uid', 'desc');
         return Inertia::render('Tickets/Index', [
