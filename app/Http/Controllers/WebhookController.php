@@ -280,7 +280,7 @@ class WebhookController extends Controller
                 'priority_id' => 3,
                 'type_id' => 4,
                 'assigned_to' => $assigned_to ? $assigned_to->id : 1,
-                'subject' =>  $ticket_create .  $subject, // Default subject if empty
+                'subject' => $subject, // Default subject if empty
                 'details' => $details,
                 'contact_id'=> $assigned_to ? $assigned_to->id : null,
             ];
