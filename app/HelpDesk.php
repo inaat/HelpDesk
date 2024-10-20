@@ -116,7 +116,7 @@ function sendEmail($to, $subject, $message) {
         $mail->Port       = config('mail.mailers.smtp.port');
 
         // Set the sender and recipient
-        $mail->setFrom(config('mail.mailers.smtp.username'), 'Support');
+        $mail->setFrom(config('mail.mailers.smtp.username'), 'Injazat Support');
         $mail->addAddress($to);
         // Content
         $mail->isHTML(true);                              // Set email format to HTML
@@ -124,6 +124,8 @@ function sendEmail($to, $subject, $message) {
         $mail->Body    = $message;
         $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
 
+        // Set encoding to UTF-8
+        $mail->CharSet = 'UTF-8'; // Set character set to UTF-8
         // Send the email
         $mail->send();
       
