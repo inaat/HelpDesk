@@ -321,7 +321,7 @@ private function generateRandomEmail()
             $ticketQuery = $ticketQuery->where('created_at', '<=', $endDate );
         }
 
-        if (auth()->user()->role->slug == 'admin') {
+       // if (auth()->user()->role->slug == 'admin') {
             // Admin can view all tickets
             $ticketQuery = $ticketQuery->where($whereAll);
             if(empty($status_id)){
@@ -329,14 +329,14 @@ private function generateRandomEmail()
             $opened_status = Status::where('slug', 'like', '%closed%')->first();
             $ticketQuery=$ticketQuery->where('status_id', '!=',$opened_status->id);
             }
-        } else {
-            // Non-admin users can only view their own tickets
-            $ticketQuery = $ticketQuery->where($whereAll)
-                ->where(function($query) {
-                    $query->where('assigned_to', auth()->user()->id)
-                          ->orWhere('contact_id', auth()->user()->id);
-                });
-        }
+        // } else {
+        //     // Non-admin users can only view their own tickets
+        //     $ticketQuery = $ticketQuery->where($whereAll)
+        //         ->where(function($query) {
+        //             $query->where('assigned_to', auth()->user()->id)
+        //                   ->orWhere('contact_id', auth()->user()->id);
+        //         });
+        // }
         $ticketQuery = $ticketQuery->orderBy('uid', 'desc');
         return Inertia::render('Tickets/Index', [
             'title' => 'Tickets',
