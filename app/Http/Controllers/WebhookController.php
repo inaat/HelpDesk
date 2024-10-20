@@ -281,13 +281,16 @@ class WebhookController extends Controller
             $ticket = Ticket::create($request_data);
             $ticket->uid = app('App\HelpDesk')->getUniqueUid($ticket->id);
             $ticket->save();
+            if($ticket->assignedTo->id===1){
             $message = "تم فتح تذكرة رقم #{$ticket->uid} مع المندوب {$ticket->assignedTo->first_name}";
 
             // Send notification messages
             $this->whatsappApiService->sendTestMsg('888', $customer->phone, $message);
+            }
             if (!empty($assigned_phone)) {
                 $this->whatsappApiService->sendTestMsg('888', $assigned_phone, $message);
             }
+            
         }
         }
         return response()->json(['message' => 'Webhook received'], 200);

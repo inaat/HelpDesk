@@ -796,6 +796,8 @@ private function generateRandomEmail()
         $ticket->update($request_data);
 
         if ($assigned) {
+            $update_message = "تم فتح تذكرة رقم #{$ticket->uid} مع المندوب {$ticket->assignedTo->first_name}";
+
             event(new AssignedUser(['ticket_id' => $ticket->id]));
         }
         if($request_data['status_id']===1 && !empty($ticket->contact->id) ) {
