@@ -296,7 +296,6 @@ private function generateRandomEmail()
                 $ticketQuery->orderBy(Request::input('field'), Request::input('direction'));
             }
         } else {
-            
             $ticketQuery->orderBy('uid', 'DESC');
         }
         // Date filtering
@@ -378,7 +377,7 @@ private function generateRandomEmail()
                         'user' => $ticket->user 
                         ? $ticket->user->name . 
                           ($ticket->user->organization 
-                              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name . ')' 
+                              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name_en . ' - ' . $ticket->user->organization->name . ')' 
                               : '') 
                         : 'N/A',
                         'priority' => $ticket->priority ? $ticket->priority->name : null,
@@ -511,7 +510,7 @@ private function generateRandomEmail()
             'id' => $user->id,
             // Concatenate organization customer number, organization name, user name, and phone number
             'name' => ($user->organization 
-                ? '(' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+                ? '(' . $user->organization->customer_no. ' ' . $user->organization->name_en  . ' ' . $user->organization->name . ')' 
                 : '') . 
                 $user->name . ' ' . $user->phone,
         ];
@@ -669,7 +668,7 @@ private function generateRandomEmail()
                     'id' => $user->id,
               // Concatenate organization customer number, organization name, user name, and phone number
             'name' => ($user->organization 
-            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name_en . ' ' . $user->organization->name . ')' 
             : '') . 
             $user->name . ' ' . $user->phone,
                 ];
@@ -704,7 +703,7 @@ private function generateRandomEmail()
                'user' => $ticket->user 
         ? $ticket->user->name . 
           ($ticket->user->organization 
-              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name . ')' 
+              ? ' (' . $ticket->user->organization->customer_no . ' - ' . $ticket->user->organization->name_en .  ' - ' . $ticket->user->organization->name . ')' 
               : '') 
         : 'N/A',
                 'contact' => $ticket->contact ?: null,

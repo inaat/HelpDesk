@@ -43,7 +43,7 @@ $customers = User::with('organization')
         'id' => $user->id,
         // Concatenate organization customer number, organization name, user name, and phone number
         'name' => ($user->organization 
-            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name . ')' 
+            ? ' (' . $user->organization->customer_no . ' ' . $user->organization->name_en . ' ' . $user->organization->name . ')' 
             : '') . 
             $user->name . ' ' . $user->phone,
     ];
