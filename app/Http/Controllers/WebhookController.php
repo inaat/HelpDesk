@@ -227,16 +227,8 @@ class WebhookController extends Controller
         // Handle user creation if customer is not found
         if (empty($customer)) {
             $user = User::where('phone', $mobile_no)->first();
-            if (!$user) {
-                $userRequest = [
-                    'first_name' => $mobile_no,
-                    'last_name' => 'whatsapp',
-                    'phone' => $mobile_no,
-                    'email' => $mobile_no . '@gmail.com',
-                    'role_id' => Role::where('slug', 'customer')->value('id'),
-                ];
-                $user = User::create($userRequest);
-            }
+           
+            
             $customer = $user;
         } else {
             $assigned_phone = $mobile_no;
@@ -272,7 +264,7 @@ class WebhookController extends Controller
                 
             }
             // Create a new ticket
-           if($ticket_create){
+           if($ticket_create && !empty($customer)){
             $request_data = [
                 'user_id' => $customer ? $customer->id : null,
                 'department_id' => $assigned_to ? $assigned_to->department_id : 2,
