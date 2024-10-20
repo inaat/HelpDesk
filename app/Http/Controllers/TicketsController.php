@@ -793,7 +793,7 @@ private function generateRandomEmail()
         if ($assigned) {
             event(new AssignedUser(['ticket_id' => $ticket->id]));
         }
-        if($request_data['status_id']===1 && $user->id != $ticket->contact->id ) {
+        if($request_data['status_id']===1 && !empty($ticket->contact->id) ) {
             $originator_inform = "Dear {$ticket->contact->name}, Ticket #{$ticket->uid} has been marked as 'completed' by {$ticket->assignedTo->name}. Please review the work, and close the ticket if everything meets your expectations.";
             if (!empty($ticket->contact->phone)) {
             $response = $this->whatsappApiService->sendTestMsg(
