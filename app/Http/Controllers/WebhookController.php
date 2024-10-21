@@ -21,22 +21,42 @@ class WebhookController extends Controller
         $this->whatsappApiService = $whatsappApiService;
     }
 
+    // public function handleWebhook(Request $request)
+    // {
+    //     $webhookData = $request->all();
+    //     Log::info('Received Webhook:', $webhookData);
+    //     $details = '';
+    //     $ticket_create=false;
+    //     // Handle messages
+    //     if (isset($webhookData['body']['message'])) {
+    //         $this->handleMessages($webhookData, $details , $ticket_create);
+    //     } else {
+    //         Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
+    //     }
+
+    //     return response()->json(['message' => 'Webhook received'], 200);
+    // }
     public function handleWebhook(Request $request)
     {
-        $webhookData = $request->all();
-        Log::info('Received Webhook:', $webhookData);
-        $details = '';
-        $ticket_create=false;
-        // Handle messages
-        if (isset($webhookData['body']['message'])) {
-            $this->handleMessages($webhookData, $details , $ticket_create);
-        } else {
-            Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
+        try {
+            $webhookData = $request->all();
+            Log::info('Received Webhook:', $webhookData);
+            $details = '';
+            $ticket_create = false;
+    
+            // Handle messages
+            if (isset($webhookData['body']['message'])) {
+                $this->handleMessages($webhookData, $details, $ticket_create);
+            } else {
+                Log::info('Received non-message type:', [$webhookData['type'] ?? 'unknown']);
+            }
+    
+            return response()->json(['message' => 'Webhook received'], 200);
+        } catch (\Exception $e) {
+            Log::error('An error occurred: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while processing the webhook'], 500);
         }
-
-        return response()->json(['message' => 'Webhook received'], 200);
     }
-
     private function handleMessages($webhookData, &$details ,$ticket_create)
     {
         $messageId = $webhookData['body']['key']['id'] ?? null;
