@@ -63,6 +63,8 @@ class WebhookController extends Controller
            
             $this->processVideo($webhookData, $messageId, $details);
         }
+        Log::info('Received message data:', [$messageData]);
+
             // Handle text messages
             $msgText = $messageData['conversation'] ?? ($messageData['extendedTextMessage']['text'] ?? null);
             if ($msgText) {
