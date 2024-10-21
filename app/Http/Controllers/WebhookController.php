@@ -282,6 +282,8 @@ class WebhookController extends Controller
                 'ticket_id' => $ticket_open->id,
                 'user_id' => $user->id,
             ]);
+            Log::info('ADD COMMENT', $lastTicket->uid);
+
         } else {
             $subject='No Subject';
             if ($msgText) {
