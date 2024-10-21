@@ -753,7 +753,7 @@ private function generateRandomEmail()
             'type_id' => ['nullable', Rule::exists('types', 'id')],
             'subject' => ['required'],
             'due' => ['nullable'],
-            'details' => ['required'],
+            'details' => ['nullable'],
         ]);
 
         if (!empty(Request::input('review')) || !empty(Request::input('rating'))) {
