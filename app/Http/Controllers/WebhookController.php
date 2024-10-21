@@ -223,7 +223,8 @@ class WebhookController extends Controller
                     'ticket_id' => $lastTicket->id,
                     'user_id' => $assigned_to->id,
                 ]);
-                Log::info('ADD COMMENT', $lastTicket->uid);
+                Log::info('ADD COMMENT Forwad', ['ticket_uid' => $lastTicket->uid]);
+
 
             }
             return response()->json(['message' => 'Webhook received'], 200);
@@ -282,7 +283,7 @@ class WebhookController extends Controller
                 'ticket_id' => $ticket_open->id,
                 'user_id' => $user->id,
             ]);
-            Log::info('ADD COMMENT', $ticket_open->uid);
+            Log::info('ADD COMMENT', ['ticket_uid' => $ticket_open->uid]);
 
         } else {
             $subject='No Subject';
