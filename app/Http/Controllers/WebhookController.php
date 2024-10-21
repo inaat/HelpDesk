@@ -196,6 +196,11 @@ class WebhookController extends Controller
         if (in_array($mobile_no, $phone_array)) {
             $assigned_to = User::where('phone', $mobile_no)->first();
         }
+        $assigned_to = User::where('phone', $mobile_no)->first();
+if (!$assigned_to) {
+    Log::warning('Assigned user not found for mobile number: ' . $mobile_no);
+    // Handle the case where the user is not found
+}
         $lastTicket = Ticket::where('assigned_to', $assigned_to->id?? null)->where('review_id', 1)->first();
         preg_match('/#(\d+)/', $details, $checkForwardMatches);
         if (!empty($checkForwardMatches)) {
