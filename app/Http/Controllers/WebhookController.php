@@ -223,6 +223,8 @@ class WebhookController extends Controller
                     'ticket_id' => $lastTicket->id,
                     'user_id' => $assigned_to->id,
                 ]);
+                Log::info('ADD COMMENT', $lastTicket->uid);
+
             }
             return response()->json(['message' => 'Webhook received'], 200);
 
