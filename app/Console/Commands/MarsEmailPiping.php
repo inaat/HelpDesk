@@ -61,6 +61,7 @@ class MarsEmailPiping extends Command {
                     ];
                     if (in_array($fromData->mail, $blockEmails)) {
                     Log::warning("tis Email is Block: " . $fromData->mail);
+                    $message->setFlag('SEEN');
                      }else{ // Example email list
                     if (!empty($messageId)) {
                         $cc = $message->getCc();
