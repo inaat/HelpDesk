@@ -43,14 +43,6 @@ class MarsEmailPiping extends Command {
                         Log::warning("From data is not valid for message ID: " . $message->getMessageId());
                         continue;
                     }
-              
-                    $user = $this->getOrCreateUser($fromData);
-
-                    $subject = $message->getSubject();
-                    $body = $message->getHTMLBody();
-                    $plainBody = $message->getTextBody(); // Get plain text body
-                    $messageId = $message->getMessageId()[0] ?? null;
-                    $from= $fromData->mail;
                     $blockEmails = [
                         'sentinel@cpl.thalesgroup.com',
                         'clickupdates@mail.clickup.com',
@@ -63,7 +55,15 @@ class MarsEmailPiping extends Command {
                     if (in_array($fromData->mail, $blockEmails)) {
                     Log::warning("tis Email is Block: " . $fromData->mail);
                     $message->setFlag('SEEN');
-                     }else{ // Example email list
+                     }else{ 
+                    $user = $this->getOrCreateUser($fromData);
+
+                    $subject = $message->getSubject();
+                    $body = $message->getHTMLBody();
+                    $plainBody = $message->getTextBody(); // Get plain text body
+                    $messageId = $message->getMessageId()[0] ?? null;
+                    $from= $fromData->mail;
+                 // Example email list
                     if (!empty($messageId)) {
                         $cc = $message->getCc();
                         $assigned_to = null;
