@@ -53,11 +53,12 @@ class MarsEmailPiping extends Command {
                     $from= $fromData->mail;
                     $blockEmails = [
                         'sentinel@cpl.thalesgroup.com',
-    'clickupdates@mail.clickup.com',
-    'team@mail.clickup.com',
-    'news@mail.clickup.com',
-    'uspb@novalys.org',
-    'visual-expert@novalys.org'
+                        'clickupdates@mail.clickup.com',
+                        'team@mail.clickup.com',
+                        'news@mail.clickup.com',
+                        'uspb@novalys.org',
+                        'visual-expert@novalys.org',
+                        'support@injazat-software.com'
                     ];
                     if (in_array($fromData->mail, $blockEmails)) {
                     Log::warning("tis Email is Block: " . $fromData->mail);
