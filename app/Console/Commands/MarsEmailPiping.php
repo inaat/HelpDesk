@@ -51,7 +51,14 @@ class MarsEmailPiping extends Command {
                     $plainBody = $message->getTextBody(); // Get plain text body
                     $messageId = $message->getMessageId()[0] ?? null;
                     $from= $fromData->mail;
-                    $blockEmails = ['sentinel@cpl.thalesgroup.com'];
+                    $blockEmails = [
+                        'sentinel@cpl.thalesgroup.com',
+    'clickupdates@mail.clickup.com',
+    'team@mail.clickup.com',
+    'news@mail.clickup.com',
+    'uspb@novalys.org',
+    'visual-expert@novalys.org'
+                    ];
                     if (in_array($fromData->mail, $blockEmails)) {
                     Log::warning("tis Email is Block: " . $fromData->mail);
                      }else{ // Example email list
