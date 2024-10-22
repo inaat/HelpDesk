@@ -51,6 +51,10 @@ class MarsEmailPiping extends Command {
                     $plainBody = $message->getTextBody(); // Get plain text body
                     $messageId = $message->getMessageId()[0] ?? null;
                     $from= $fromData->mail;
+                    $blockEmails = ['sentinel@cpl.thalesgroup.com'];
+                    if (in_array($fromData->mail, $blockEmails)) {
+                    Log::warning("tis Email is Block: " . $fromData->mail);
+                     }else{ // Example email list
                     if (!empty($messageId)) {
                         $cc = $message->getCc();
                         $assigned_to = null;
@@ -63,6 +67,7 @@ class MarsEmailPiping extends Command {
                         $this->processAttachments($message, $ticket, $user);
                         $message->setFlag('SEEN');
                     }
+                }
                 }
 
             } catch (\Exception $e) {
